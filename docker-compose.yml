@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  android:
+    build: .
+    container_name: blindfold-chess-dev
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/app
+      - gradle-cache:/root/.gradle
+      - android-sdk-cache:/root/.android
+    environment:
+      - ANDROID_HOME=/opt/android-sdk
+    working_dir: /app
+    # Pour pouvoir lancer l'émulateur si besoin (nécessite --privileged sur certains hosts)
+    privileged: true
+    network_mode: host
+
+volumes:
+  gradle-cache:
+  android-sdk-cache:
