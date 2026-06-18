@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blindfold Chess — Aperçu web</title>
+  <style>
+    :root {
+      --bg: #12141a;
+      --surface: #1c1f28;
+      --text: #e8eaf0;
+      --muted: #9aa3b2;
+      --accent: #7eb8a4;
+      --correct: #6bbf8a;
+      --incorrect: #d4847a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .phone {
+      width: min(390px, 100%);
+      min-height: 780px;
+      border: 1px solid #2a2f3a;
+      border-radius: 28px;
+      overflow: hidden;
+      background: var(--bg);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    }
+
+    .screen {
+      display: none;
+      min-height: 780px;
+      padding: 32px 24px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 12px;
+    }
+
+    .screen.active { display: flex; }
+
+    h1, h2 { margin: 0; font-weight: 600; }
+    p { margin: 0; color: var(--muted); line-height: 1.5; }
+
+    .card {
+      width: 100%;
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: left;
+      margin-top: 32px;
+    }
+
+    .square {
+      font-size: 72px;
+      font-weight: 300;
+      color: var(--accent);
+      margin: 32px 0;
+      letter-spacing: 2px;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 15px;
+      cursor: pointer;
+      background: var(--accent);
+      color: var(--bg);
+      font-weight: 600;
+    }
+
+    button.secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid #3a4150;
+      flex: 1;
+    }
+
+    button.ghost {
+      background: var(--surface);
+      color: var(--muted);
+    }
+
+    .feedback { font-size: 18px; font-weight: 600; min-height: 28px; }
+    .feedback.ok { color: var(--correct); }
+    .feedback.ko { color: var(--incorrect); }
+
+    .score { color: var(--muted); margin-top: 24px; }
+
+    .banner {
+      width: 100%;
+      background: #1a2330;
+      color: #b8c7d9;
+      border: 1px solid #2d3a4d;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <div id="home" class="screen active">
+      <div class="banner">
+        Aperçu statique web — ce n'est pas l'app Android, mais la même UI en version démo.
+      </div>
+      <h1>Blindfold Chess Trainer</h1>
+      <p>Calm, focused training for mental visualization</p>
+      <div class="card">
+        <h2>Square Colors</h2>
+        <p style="margin-top: 8px;">Is this square light or dark?</p>
+        <button style="width: 100%; margin-top: 16px;" onclick="startDrill()">Start drill</button>
+      </div>
+    </div>
+
+    <div id="drill" class="screen">
+      <h2>Square Colors</h2>
+      <p>Is this square light or dark?</p>
+      <div class="square" id="squareLabel">e4</div>
+      <div id="answers" class="row">
+        <button class="secondary" onclick="answer('LIGHT')">Light</button>
+        <button class="secondary" onclick="answer('DARK')">Dark</button>
+      </div>
+      <div id="feedback" class="feedback"></div>
+      <button id="nextBtn" style="display:none; margin-top: 16px;" onclick="nextQuestion()">Next</button>
+      <div class="score" id="score">Score: 0 / 0</div>
+      <button class="ghost" style="margin-top: 24px;" onclick="goHome()">Back</button>
+    </div>
+  </div>
+
+  <script>
+    const files = "abcdefgh";
+    let question = null;
+    let answered = false;
+    let correctCount = 0;
+    let totalCount = 0;
+
+    function squareColor(fileIndex, rankIndex) {
+      return (fileIndex + rankIndex) % 2 === 0 ? "DARK" : "LIGHT";
+    }
+
+    function randomSquare() {
+      const file = files[Math.floor(Math.random() * 8)];
+      const rank = 1 + Math.floor(Math.random() * 8);
+      const fileIndex = file.charCodeAt(0) - 97;
+      const rankIndex = rank - 1;
+      return {
+        label: `${file}${rank}`,
+        color: squareColor(fileIndex, rankIndex),
+      };
+    }
+
+    function show(screenId) {
+      document.querySelectorAll(".screen").forEach((el) => el.classList.remove("active"));
+      document.getElementById(screenId).classList.add("active");
+    }
+
+    function startDrill() {
+      answered = false;
+      correctCount = 0;
+      totalCount = 0;
+      show("drill");
+      nextQuestion();
+    }
+
+    function nextQuestion() {
+      question = randomSquare();
+      answered = false;
+      document.getElementById("squareLabel").textContent = question.label;
+      document.getElementById("feedback").textContent = "";
+      document.getElementById("feedback").className = "feedback";
+      document.getElementById("answers").style.display = "flex";
+      document.getElementById("nextBtn").style.display = "none";
+      updateScore();
+    }
+
+    function answer(choice) {
+      if (!question || answered) return;
+      answered = true;
+      totalCount += 1;
+      const ok = choice === question.color;
+      if (ok) correctCount += 1;
+      const feedback = document.getElementById("feedback");
+      feedback.textContent = ok ? "Correct" : "Not quite — try the next one";
+      feedback.className = ok ? "feedback ok" : "feedback ko";
+      document.getElementById("answers").style.display = "none";
+      document.getElementById("nextBtn").style.display = "inline-block";
+      updateScore();
+    }
+
+    function updateScore() {
+      document.getElementById("score").textContent = `Score: ${correctCount} / ${totalCount}`;
+    }
+
+    function goHome() {
+      show("home");
+    }
+  </script>
+</body>
+</html>

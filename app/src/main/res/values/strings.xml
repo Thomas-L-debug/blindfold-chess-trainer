@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Blindfold Chess</string>
+    <string name="home_title">Blindfold Chess Trainer</string>
+    <string name="home_subtitle">Calm, focused training for mental visualization</string>
+    <string name="drill_square_color_title">Square Colors</string>
+    <string name="drill_square_color_description">Is this square light or dark?</string>
+    <string name="answer_light">Light</string>
+    <string name="answer_dark">Dark</string>
+    <string name="feedback_correct">Correct</string>
+    <string name="feedback_incorrect">Not quite — try the next one</string>
+    <string name="score_label">Score: %1$d / %2$d</string>
+    <string name="next_question">Next</string>
+    <string name="start_drill">Start drill</string>
+    <string name="board_show_notation">Coordinates</string>
+    <string name="board_show">Show board</string>
+    <string name="board_hide">Hide board</string>
+</resources>

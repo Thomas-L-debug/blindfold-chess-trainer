@@ -5,6 +5,7 @@ build/
 
 # Android
 local.properties
+local.properties.bak
 *.keystore
 *.jks
 keystore.properties

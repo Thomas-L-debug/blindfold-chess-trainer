@@ -1,0 +1,13 @@
+# Copie ce fichier vers local.properties et adapte le chemin.
+# Ne committe jamais local.properties (déjà dans .gitignore).
+
+# --- Projet ouvert via \\wsl$\Ubuntu\... dans Android Studio (Gradle dans WSL) ---
+# Utilise le SDK Windows monté dans WSL :
+sdk.dir=/mnt/c/Users/thoma/AppData/Local/Android/Sdk
+
+# --- Projet ouvert depuis le disque Windows (C:\Users\...) ---
+# Android Studio génère souvent automatiquement :
+# sdk.dir=C\:\\Users\\thoma\\AppData\\Local\\Android\\Sdk
+
+# --- SDK installé nativement dans WSL (sans Android Studio Windows) ---
+# sdk.dir=/home/thomas/Android/Sdk

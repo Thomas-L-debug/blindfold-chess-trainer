@@ -4,6 +4,8 @@ services:
   android:
     build: .
     container_name: blindfold-chess-dev
+    # Évite que Gradle écrive des fichiers root dans app/build (casse le build local ensuite)
+    user: "${UID:-1000}:${GID:-1000}"
     stdin_open: true
     tty: true
     volumes:

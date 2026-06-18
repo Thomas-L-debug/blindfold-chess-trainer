@@ -34,4 +34,4 @@ RUN yes | sdkmanager --licenses && \
 WORKDIR /app
 
 # Default command when running the container
-CMD ["./gradlew", "tasks"]
+CMD ["./gradlew", "test", "assembleDebug", "--no-daemon"]
