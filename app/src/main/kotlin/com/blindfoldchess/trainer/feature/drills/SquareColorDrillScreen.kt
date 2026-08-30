@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -26,15 +27,32 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.blindfoldchess.trainer.R
 import com.blindfoldchess.trainer.core.chess.SquareColor
+import com.blindfoldchess.trainer.feature.board.SquareHighlight
 import com.blindfoldchess.trainer.ui.theme.Correct
 import com.blindfoldchess.trainer.ui.theme.Incorrect
+import kotlinx.coroutines.delay
+
+private const val SQUARE_HIGHLIGHT_MS = 500L
 
 @Composable
 fun SquareColorDrillScreen(
     onBack: () -> Unit,
+    onSquareHighlight: (SquareHighlight?) -> Unit = {},
     viewModel: SquareColorDrillViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.answered, uiState.question, uiState.wasCorrect) {
+        val question = uiState.question
+        val wasCorrect = uiState.wasCorrect
+        if (!uiState.answered || question == null || wasCorrect == null) {
+            onSquareHighlight(null)
+            return@LaunchedEffect
+        }
+        onSquareHighlight(SquareHighlight(question.square, correct = wasCorrect))
+        delay(SQUARE_HIGHLIGHT_MS)
+        onSquareHighlight(null)
+    }
 
     Column(
         modifier = Modifier

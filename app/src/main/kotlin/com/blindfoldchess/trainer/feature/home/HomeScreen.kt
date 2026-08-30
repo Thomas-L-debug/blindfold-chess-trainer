@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -23,14 +25,17 @@ import com.blindfoldchess.trainer.R
 @Composable
 fun HomeScreen(
     onStartSquareColorDrill: () -> Unit,
+    onStartPiecePathDrill: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp),
-        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        Spacer(modifier = Modifier.height(8.dp))
+
         Text(
             text = stringResource(R.string.home_title),
             style = MaterialTheme.typography.headlineMedium,
@@ -49,32 +54,55 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-            ),
+        DrillCard(
+            title = stringResource(R.string.drill_square_color_title),
+            description = stringResource(R.string.drill_square_color_description),
+            onStart = onStartSquareColorDrill,
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        DrillCard(
+            title = stringResource(R.string.drill_piece_path_title),
+            description = stringResource(R.string.drill_piece_path_description),
+            onStart = onStartPiecePathDrill,
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun DrillCard(
+    title: String,
+    description: String,
+    onStart: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = onStart,
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(
-                    text = stringResource(R.string.drill_square_color_title),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text(
-                    text = stringResource(R.string.drill_square_color_description),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = onStartSquareColorDrill,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.start_drill))
-                }
+                Text(stringResource(R.string.start_drill))
             }
         }
     }

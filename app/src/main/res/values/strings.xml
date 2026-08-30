@@ -12,7 +12,17 @@
     <string name="score_label">Score: %1$d / %2$d</string>
     <string name="next_question">Next</string>
     <string name="start_drill">Start drill</string>
+    <string name="drill_piece_path_title">Piece Path</string>
+    <string name="drill_piece_path_description">Reach the target with legal moves</string>
+    <string name="piece_bishop">Bishop</string>
+    <string name="piece_knight">Knight</string>
+    <string name="piece_rook">Rook</string>
+    <string name="piece_queen">Queen</string>
+    <string name="piece_path_from_to">%1$s → %2$s</string>
+    <string name="piece_path_current">Now on %1$s</string>
+    <string name="feedback_illegal_move">Illegal move — starting over</string>
     <string name="board_show_notation">Coordinates</string>
+    <string name="board_show_arrows">Arrows</string>
     <string name="board_show">Show board</string>
     <string name="board_hide">Hide board</string>
 </resources>
