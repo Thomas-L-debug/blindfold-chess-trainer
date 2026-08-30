@@ -8,18 +8,32 @@ Contexte complet : [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md)
 
 ---
 
-## Où en est le projet ?
+## Où en est le projet ? (30 août 2026)
 
-| Élément | Statut |
-|---|---|
-| Projet Android (Kotlin + Jetpack Compose) | ✅ |
-| Module `core:chess` (logique métier) | ✅ |
-| Drill « Square Colors » (case claire ou foncée ?) | ✅ |
-| Tests unitaires | ✅ |
-| CI GitHub Actions | ✅ |
-| Parties à l'aveugle / Stockfish / Room | ❌ pas encore |
+Workspace principal : `D:\CodingProject\blindfold-chess-trainer`  
+Branche : `main` (dernier commit feature : *piece-path drill, board feedback, compact board chrome*).
 
-**Ce que tu peux tester aujourd'hui :** l'app se lance, affiche un écran d'accueil, puis un drill où une case aléatoire (`e4`, `d5`…) s'affiche et tu dois répondre *Light* ou *Dark*. Un score local s'affiche, sans streak ni pression.
+| Élément | Statut | Notes |
+|---|---|---|
+| Projet Android (Kotlin + Jetpack Compose) | ✅ | AGP 8.9.1, Kotlin 2.1.10, minSdk 26, targetSdk 35 |
+| Module `core:chess` | ✅ | Cases, couleurs, pièces (B/N/R/Q), coups légaux plateau vide |
+| Drill **Square Colors** | ✅ | Case aléatoire → Light / Dark, flash vert/rouge 0,5 s sur l'échiquier |
+| Drill **Piece Path** | ✅ | Fou / cavalier / tour / dame, départ → arrivée, pavé a–h / 1–8 |
+| Échiquier global (`AppShell`) | ✅ | Compact (hauteur = carré du plateau), pas la moitié de l'écran |
+| Coordinates | ✅ | Rangs à gauche, files en bas ; l'échiquier ne saute pas |
+| Arrows | ✅ | Flèches orange coucher de soleil + cercles sur les cases du parcours |
+| Hide board | ✅ | Petit bouton **dans** le coin bas-droit de la zone échiquier |
+| Show board | ✅ | Bouton pleine largeur seulement quand le plateau est masqué |
+| Tests unitaires | ✅ | Couleurs, coups, reset Piece Path, flèches (`:core:chess:test` + `:app:testDebugUnitTest`) |
+| CI GitHub Actions | ✅ | `.github/workflows/ci.yml` : tests + APK debug sur push/PR `main` |
+| Pièces dessinées sur l'échiquier | ❌ | Plateau encore vide (flèches / surlignage seulement) |
+| Room / Stockfish / puzzles | ❌ | pas encore |
+| Preview web (`preview/`) | ⚠️ | Démo Square Colors seulement — **pas** à jour avec Piece Path ni le board |
+
+**Ce que tu peux tester aujourd'hui :**
+
+1. **Square Colors** — une case (`e4`, `d5`…) → *Light* / *Dark*. Bonne réponse : case en vert 0,5 s. Mauvaise : rouge 0,5 s. Score local, sans streak.
+2. **Piece Path** — choisir une pièce, aller du départ à l'arrivée par des coups légaux (lettre puis chiffre). Coup illégal → message immédiat et **reset au départ** (même exercice). Les flèches + cercles suivent le trajet si **Arrows** est coché.
 
 ---
 
@@ -224,13 +238,14 @@ L'APK sera généré dans `app/build/outputs/apk/debug/` sur ton disque (volume 
 
 ## Ce que tu dois voir dans l'app
 
-1. **Écran d'accueil** — titre « Blindfold Chess Trainer », fond sombre, carte « Square Colors ».
-2. **Bouton « Start drill »** — ouvre le drill.
-3. **Drill** — une case en grand (`g7`, `a1`…), deux boutons *Light* / *Dark*.
-4. **Après ta réponse** — feedback discret (*Correct* ou *Not quite*), bouton *Next*, score `X / Y`.
-5. **Bouton Back** — retour à l'accueil.
+1. **Écran d'accueil** — titre « Blindfold Chess Trainer », deux cartes : *Square Colors* et *Piece Path*.
+2. **Échiquier en haut** — compact, options à droite : *Coordinates*, *Arrows*, et **Hide board** en bas de cette colonne.
+3. **Square Colors** — case en grand, *Light* / *Dark*, flash de la case sur le plateau, *Next*, score `X / Y`.
+4. **Piece Path** — sélecteur Bishop / Knight / Rook / Queen, `e2 → f4`, pavé 2×4 lettres puis 2×4 chiffres. Trajet en flèches si Arrows est coché.
+5. **Back** — retour accueil.
 
-Pour valider mentalement : `a1` est **foncée**, `a2` est **claire**, `e4` est **claire**.
+Pour valider Square Colors : `a1` **foncée**, `a2` **claire**, `e4` **claire**.  
+Pour valider Piece Path (tour) : même file ou même rang = légal ; sinon reset.
 
 ---
 
@@ -406,19 +421,66 @@ sdk.dir=/home/thomas/Android/Sdk
 ## Structure du projet
 
 ```
-app/              → UI Compose (accueil, drills)
+app/              → UI Compose (accueil, drills, échiquier)
 core/chess/       → logique échecs + tests unitaires
-preview/          → aperçu web statique (navigateur)
-scripts/          → utilitaires (droits build, etc.)
+preview/          → aperçu web statique (Square Colors seulement, pas l'app réelle)
+scripts/          → utilitaires (SDK Windows/WSL, droits build)
 .github/workflows → CI (tests + APK debug)
+docs/             → PROJECT_CONTEXT.md (contexte session)
 docker-compose.yml
 Dockerfile
 ```
 
+Fichiers UI / drills :
+
+```
+app/.../trainer/
+├── MainActivity.kt                 # AppScreen : Home | SquareColor | PiecePath
+├── feature/board/
+│   ├── AppShell.kt                 # Board compact + contenu
+│   ├── BoardPanel.kt               # Échiquier + Coordinates / Arrows / Hide
+│   └── ChessBoard.kt               # Canvas 8×8, highlight, flèches, cercles
+├── feature/home/HomeScreen.kt
+└── feature/drills/
+    ├── SquareColorDrillScreen.kt
+    ├── SquareColorDrillViewModel.kt
+    ├── PiecePathDrillScreen.kt     # pavé lettres / chiffres
+    └── PiecePathDrillViewModel.kt
+
+core/chess/.../
+├── Square.kt / SquareColor.kt / SquareColorDrill.kt
+├── PieceType.kt                    # canMove() plateau vide
+└── PiecePathDrill.kt               # génération départ / arrivée
+```
+
 ---
 
-## Prochaines étapes prévues
+## Prochaines étapes — recommandations
 
-1. Drills supplémentaires (noms de cases, diagonales, tours de cavalier…)
-2. Persistance des sessions (Room)
-3. Parties à l'aveugle contre Stockfish
+Une feature à la fois. Pas de streaks, pas de dark patterns. `chesslib` est dans Gradle mais **pas encore utilisé**.
+
+**Priorité (ordre conseillé)**
+
+1. **Pièces sur l'échiquier** — dessiner au moins la pièce du drill Piece Path sur la case courante (et idéalement départ / arrivée). Sans ça, les flèches restent abstraites. Option toggle à côté de Coordinates / Arrows.
+2. **Cible et départ marqués sur le plateau** (Piece Path) — même sans pièces : un marqueur discret sur la case de départ et d'arrivée pendant tout l'exercice.
+3. **Drill « Square names »** — montrer une case (ou la pointer), le joueur la nomme avec le même pavé a–h / 1–8. Réutilise l'UI existante.
+4. **Orientation blanc / noir** — retourner le plateau (utile dès qu'on visualise des trajets).
+5. **Difficulté Piece Path** — limiter la distance (ex. cavalier 1–3 coups) pour que les puzzles restent jouables à l'aveugle.
+6. **Room** — historique calme des sessions (scores, pas de streak). Seulement une fois qu'il y a 2–3 drills stables.
+7. **Mettre à jour `preview/index.html`** — ou l'abandonner : il est en retard sur l'app réelle.
+
+**Plus tard (pas maintenant)**
+
+- Stockfish / parties à l'aveugle
+- Puzzles tactiques
+- Navigation Compose (l'enum `AppScreen` suffit pour 2–3 écrans)
+- ktlint / detekt, upgrade AGP
+- Saisie vocale
+- iOS / KMP
+
+**Règles session suivante**
+
+- Travailler dans `D:\CodingProject\blindfold-chess-trainer`.
+- Lire `docs/PROJECT_CONTEXT.md` en plus de ce README.
+- Lancer `./gradlew :core:chess:test :app:testDebugUnitTest` après un changement de logique.
+- Un drill ou un toggle board à la fois.
