@@ -1,0 +1,16 @@
+Blindfold Chess Trainer
+Copyright (C) 2026 the Blindfold Chess Trainer authors
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program includes Stockfish, a UCI chess engine:
+  Copyright (C) 2004-2022 The Stockfish developers (see AUTHORS)
+  Source vendored at app/src/main/cpp/stockfish (tag sf_15)
+  License: GNU GPL version 3 (see LICENSE)
+
+chesslib is used for rules and notation:
+  Copyright the chesslib authors
+  License: Apache License 2.0 (compatible with GPLv3)
