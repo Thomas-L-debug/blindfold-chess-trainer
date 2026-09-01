@@ -2,7 +2,7 @@
 
 Application Android calme pour s'entraîner aux échecs à l'aveugle — visualisation mentale pure, sans stress ni dark patterns.
 
-**Licence : GPLv3** (imposée par le vendoring de Stockfish — voir `NOTICE`). L'app est destinée à une publication **gratuite sur le Play Store** ; publier l'APK est un acte de « conveying » au sens GPLv3 §6, donc quiconque le reçoit doit pouvoir obtenir le code source correspondant. Avant publication : rendre ce dépôt public (ou fournir une offre écrite équivalente) et prévoir une mention de licence/lien vers les sources dans l'app (par ex. un écran « À propos »). L'ancienne mention « Dépôt privé — tous droits réservés » ne s'applique plus.
+**Licence : GPLv3** (imposée par le vendoring de Stockfish — voir `NOTICE`). L'app est destinée à une publication **gratuite sur le Play Store** ; publier l'APK est un acte de « conveying » au sens GPLv3 §6, donc quiconque le reçoit doit pouvoir obtenir le code source correspondant. Le dépôt GitHub est **public**, ce qui couvre cette obligation ; il reste à prévoir une mention de licence/lien vers les sources dans l'app elle-même (par ex. un écran « À propos »). L'ancienne mention « Dépôt privé — tous droits réservés » ne s'applique plus.
 
 Contexte complet : [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md)
 
@@ -502,7 +502,7 @@ Une feature à la fois. Pas de streaks, pas de dark patterns. `chesslib` est mai
 **Priorité (ordre conseillé)**
 
 1. **Committer l'état actuel** en plusieurs commits logiques (migration chesslib / pièces + flip / nouveaux drills / Stockfish natif / LICENSE) avant d'ajouter du scope. Rien de tout ça n'est commité au-delà de `effded9`.
-2. **Rendre le dépôt public** (ou offre écrite du code source) et ajouter une mention de licence/lien sources dans l'app — obligation GPLv3 avant publication sur le Play Store (voir la note de licence en haut de ce fichier).
+2. **Ajouter une mention de licence/lien vers les sources dans l'app** (par ex. écran « À propos ») — le dépôt est déjà public, il ne manque que ce point côté app avant publication sur le Play Store (voir la note de licence en haut de ce fichier).
 3. **Vrai mode aveugle** — un moyen de masquer le plateau en cours de drill/partie tout en suivant la position mentalement ; distinct du toggle Hide actuel, qui arrête juste le rendu sans être un vrai défi gradué.
 4. **Room** — historique calme des sessions (scores, pas de streak), une fois l'ensemble de drills actuel stabilisé.
 5. **Drill « Square names »**, distinct de Find the Square (nommer une case montrée, plutôt que taper une case nommée) — réutilise `CoordinatePad`.

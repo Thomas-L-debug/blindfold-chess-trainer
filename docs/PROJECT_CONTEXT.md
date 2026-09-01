@@ -190,7 +190,7 @@ core/chess/src/main/kotlin/.../
 | Tests | JUnit in `:core:chess` and `:app` (91 tests) |
 | CI | GitHub Actions `.github/workflows/ci.yml` — installs NDK 28.2.13676358 + CMake 3.22.1 for the native build |
 | DevOps optional | Docker + `docker-compose.yml` |
-| Licensing | GPLv3 (`LICENSE`), required by the vendored Stockfish; `NOTICE` documents Stockfish (GPLv3) and chesslib (Apache 2.0) provenance. App is intended for **free Play Store distribution** — publishing the APK is "conveying" under GPLv3 §6, so the repo must become public (or an equivalent written source offer) before release, plus an in-app license/source link |
+| Licensing | GPLv3 (`LICENSE`), required by the vendored Stockfish; `NOTICE` documents Stockfish (GPLv3) and chesslib (Apache 2.0) provenance. App is intended for **free Play Store distribution** — publishing the APK is "conveying" under GPLv3 §6, so recipients must be able to get the source; the GitHub repo is already public, which covers that. Still missing: an in-app license/source link |
 
 **Versions** (`gradle/libs.versions.toml`):
 - AGP 8.9.1, Kotlin 2.1.10, Compose BOM 2025.02.00
@@ -263,7 +263,7 @@ Avoid unless needed for Docker/terminal. `settings.gradle.kts` auto-fixes `local
 4. ~~Find the Square drill~~ ✅
 5. ~~Famous games (guided replay)~~ ✅
 6. ~~Free board + Play vs. Stockfish~~ ✅
-7. Make the repo public (or written source offer) + in-app license/source link — required by GPLv3 before Play Store publication
+7. Add an in-app license/source link — the repo is already public (satisfies GPLv3 §6), this closes the remaining gap before Play Store publication
 8. Room: gentle session history + stats (no streaks)
 9. PGN import (post-MVP)
 
@@ -273,14 +273,13 @@ Avoid unless needed for Docker/terminal. `settings.gradle.kts` auto-fixes `local
 
 Pick **one** feature at a time:
 
-1. **Commit the current working tree** in logical chunks (chesslib migration / pieces+flip / new drills / native Stockfish / LICENSE) before adding more scope.
-2. **Make the repo public (or written source offer) + in-app license/source link** — required by GPLv3 before publishing on the Play Store; see the Licensing row above.
-3. **True blindfold mode** — a way to hide the board mid-drill/game while still tracking the position mentally (distinct from the existing Hide-board toggle, which currently just stops rendering, not a graded blindfold challenge).
-4. **Room** — gentle session history (no streaks), once the current drill set feels stable.
-5. **Square names drill** — distinct from Find the Square (name a shown square, rather than tap a named one), reusing `CoordinatePad`.
-6. **Cap Piece Path / Find the Square difficulty** (e.g. knight 1–3 moves) so blindfold attempts stay fair.
-7. Add `ktlint`/`detekt`.
-8. `preview/index.html` is stale — update or remove it now that there are 6 drills, not 1.
+1. **Add an in-app license/source link** (e.g. an "About" screen) — the repo is already public, satisfying GPLv3 §6; this is the remaining piece before Play Store publication. See the Licensing row above.
+2. **True blindfold mode** — a way to hide the board mid-drill/game while still tracking the position mentally (distinct from the existing Hide-board toggle, which currently just stops rendering, not a graded blindfold challenge).
+3. **Room** — gentle session history (no streaks), once the current drill set feels stable.
+4. **Square names drill** — distinct from Find the Square (name a shown square, rather than tap a named one), reusing `CoordinatePad`.
+5. **Cap Piece Path / Find the Square difficulty** (e.g. knight 1–3 moves) so blindfold attempts stay fair.
+6. Add `ktlint`/`detekt`.
+7. `preview/index.html` is stale — update or remove it now that there are 6 drills, not 1.
 
 Not planned: a tactical "blindfold puzzle" drill — deliberately dropped, see "Deliberately out of scope" above.
 
