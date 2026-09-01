@@ -40,4 +40,21 @@ class BoardArrowTest {
         )
         assertTrue(visitedSquares(emptyList()).isEmpty())
     }
+
+    @Test
+    fun `grid tap maps to algebraic squares`() {
+        assertEquals(Square('a', 8), squareFromGrid(0, 0))
+        assertEquals(Square('h', 1), squareFromGrid(7, 7))
+        assertEquals(Square('e', 4), squareFromGrid(4, 4))
+        assertEquals(null, squareFromGrid(-1, 0))
+        assertEquals(null, squareFromGrid(8, 0))
+    }
+
+    @Test
+    fun `flipped grid tap maps from black's side`() {
+        assertEquals(Square('h', 1), squareFromGrid(0, 0, flipped = true))
+        assertEquals(Square('a', 8), squareFromGrid(7, 7, flipped = true))
+        assertEquals(Square('e', 4), squareFromGrid(3, 3, flipped = true))
+        assertEquals(Square('d', 5), squareFromGrid(4, 4, flipped = true))
+    }
 }

@@ -19,6 +19,7 @@ data class PiecePathUiState(
     val solved: Boolean = false,
     val illegal: Boolean = false,
     val lastMoveSquare: Square? = null,
+    val lastMoveFrom: Square? = null,
     val lastMoveLegal: Boolean? = null,
     val flashToken: Int = 0,
     val correctCount: Int = 0,
@@ -72,6 +73,7 @@ class PiecePathDrillViewModel(
                 solved = reachedTarget,
                 illegal = false,
                 lastMoveSquare = to,
+                lastMoveFrom = from,
                 lastMoveLegal = true,
                 flashToken = it.flashToken + 1,
                 correctCount = it.correctCount + if (reachedTarget) 1 else 0,
@@ -94,6 +96,7 @@ class PiecePathDrillViewModel(
                 solved = false,
                 illegal = false,
                 lastMoveSquare = null,
+                lastMoveFrom = null,
                 lastMoveLegal = null,
                 flashToken = it.flashToken + 1,
             )
@@ -102,6 +105,7 @@ class PiecePathDrillViewModel(
 
     private fun restartFromZero(attempted: Square) {
         val start = _uiState.value.start ?: return
+        val from = _uiState.value.current ?: start
         _uiState.update {
             it.copy(
                 current = start,
@@ -110,6 +114,7 @@ class PiecePathDrillViewModel(
                 solved = false,
                 illegal = true,
                 lastMoveSquare = attempted,
+                lastMoveFrom = from,
                 lastMoveLegal = false,
                 flashToken = it.flashToken + 1,
                 totalCount = it.totalCount + 1,

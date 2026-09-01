@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.blindfoldchess.trainer.R
+import com.blindfoldchess.trainer.core.chess.OccupiedSquare
+import com.blindfoldchess.trainer.core.chess.Square
 
 @Composable
 fun AppShell(
@@ -26,8 +28,15 @@ fun AppShell(
     onShowNotationChange: (Boolean) -> Unit,
     showArrows: Boolean,
     onShowArrowsChange: (Boolean) -> Unit,
+    showPieces: Boolean,
+    onShowPiecesChange: (Boolean) -> Unit,
+    flipped: Boolean,
+    onFlipBoard: () -> Unit,
     highlight: SquareHighlight? = null,
     arrows: List<BoardArrow> = emptyList(),
+    pieces: List<OccupiedSquare> = emptyList(),
+    selectedSquare: Square? = null,
+    onSquareClick: ((Square) -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     Column(
@@ -41,9 +50,16 @@ fun AppShell(
                 onShowNotationChange = onShowNotationChange,
                 showArrows = showArrows,
                 onShowArrowsChange = onShowArrowsChange,
+                showPieces = showPieces,
+                onShowPiecesChange = onShowPiecesChange,
                 onHideBoard = onToggleBoardVisible,
+                flipped = flipped,
+                onFlipBoard = onFlipBoard,
                 highlight = highlight,
                 arrows = arrows,
+                pieces = pieces,
+                selectedSquare = selectedSquare,
+                onSquareClick = onSquareClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight(),

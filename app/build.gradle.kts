@@ -8,6 +8,8 @@ android {
     namespace = "com.blindfoldchess.trainer"
     compileSdk = 35
 
+    ndkVersion = "28.2.13676358"
+
     defaultConfig {
         applicationId = "com.blindfoldchess.trainer"
         minSdk = 26
@@ -15,6 +17,21 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters += listOf("arm64-v8a", "x86_64")
+        }
+        externalNativeBuild {
+            cmake {
+                arguments += listOf("-DANDROID_STL=c++_shared")
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
     }
 
     buildTypes {
@@ -49,6 +66,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
@@ -57,6 +75,7 @@ dependencies {
     implementation(libs.androidx.material3)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

@@ -1,37 +1,54 @@
 package com.blindfoldchess.trainer.feature.board
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import kotlin.math.atan2
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.blindfoldchess.trainer.core.chess.ChessMan
+import com.blindfoldchess.trainer.core.chess.OccupiedSquare
 import com.blindfoldchess.trainer.core.chess.Square
 import com.blindfoldchess.trainer.core.chess.SquareColor
+import com.blindfoldchess.trainer.ui.theme.Accent
 import com.blindfoldchess.trainer.ui.theme.BoardArrow
 import com.blindfoldchess.trainer.ui.theme.BoardDarkSquare
 import com.blindfoldchess.trainer.ui.theme.BoardLightSquare
 import com.blindfoldchess.trainer.ui.theme.BoardNotation
+import com.blindfoldchess.trainer.ui.theme.BoardPieceBlack
+import com.blindfoldchess.trainer.ui.theme.BoardPieceWhite
 import com.blindfoldchess.trainer.ui.theme.Correct
 import com.blindfoldchess.trainer.ui.theme.Incorrect
+import kotlin.math.atan2
 
 data class SquareHighlight(
     val square: Square,
@@ -59,6 +76,26 @@ fun visitedSquares(arrows: List<BoardArrow>): List<Square> {
 private val FILES = ('a'..'h').toList()
 private val RANKS = (8 downTo 1).toList()
 private val NotationSize = 20.dp
+private const val PieceFontFactor = 0.80f
+private const val ArrowAlpha = 0.70f
+private const val ArrivalCircleDiameterFactor = 0.90f
+
+fun squareFromGrid(col: Int, row: Int, flipped: Boolean = false): Square? {
+    if (col !in 0..7 || row !in 0..7) return null
+    val file = if (flipped) ('h' - col) else ('a' + col)
+    val rank = if (flipped) row + 1 else 8 - row
+    return Square(file, rank)
+}
+
+private fun files(flipped: Boolean): List<Char> = if (flipped) FILES.asReversed() else FILES
+
+private fun ranks(flipped: Boolean): List<Int> = if (flipped) RANKS.asReversed() else RANKS
+
+private fun gridCol(file: Char, flipped: Boolean): Int =
+    if (flipped) 'h' - file else file - 'a'
+
+private fun gridRow(rank: Int, flipped: Boolean): Int =
+    if (flipped) rank - 1 else 8 - rank
 
 @Composable
 fun ChessBoard(
@@ -67,6 +104,11 @@ fun ChessBoard(
     highlight: SquareHighlight? = null,
     showArrows: Boolean = false,
     arrows: List<BoardArrow> = emptyList(),
+    showPieces: Boolean = true,
+    pieces: List<OccupiedSquare> = emptyList(),
+    selectedSquare: Square? = null,
+    onSquareClick: ((Square) -> Unit)? = null,
+    flipped: Boolean = false,
 ) {
     BoxWithConstraints(
         modifier = modifier,
@@ -85,13 +127,17 @@ fun ChessBoard(
                     contentAlignment = Alignment.Center,
                 ) {
                     if (showNotation) {
-                        RankNotationColumn(boardHeight = side)
+                        RankNotationColumn(boardHeight = side, flipped = flipped)
                     }
                 }
 
                 BoardCanvas(
                     highlight = highlight,
                     arrows = if (showArrows) arrows else emptyList(),
+                    pieces = if (showPieces) pieces else emptyList(),
+                    selectedSquare = selectedSquare,
+                    onSquareClick = onSquareClick,
+                    flipped = flipped,
                     modifier = Modifier
                         .width(side)
                         .height(side),
@@ -107,6 +153,7 @@ fun ChessBoard(
                 if (showNotation) {
                     FileNotationRow(
                         boardWidth = side,
+                        flipped = flipped,
                         modifier = Modifier.width(side + NotationSize),
                     )
                 }
@@ -119,65 +166,179 @@ fun ChessBoard(
 private fun BoardCanvas(
     highlight: SquareHighlight?,
     arrows: List<BoardArrow>,
+    pieces: List<OccupiedSquare>,
+    selectedSquare: Square?,
+    onSquareClick: ((Square) -> Unit)?,
+    flipped: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Canvas(modifier = modifier) {
-        val squareSize = size.width / 8f
-        RANKS.forEachIndexed { rowIndex, rank ->
-            FILES.forEachIndexed { colIndex, file ->
-                val squareColor = SquareColor.of(Square(file, rank))
-                val color = if (squareColor == SquareColor.LIGHT) BoardLightSquare else BoardDarkSquare
+    Box(modifier = modifier) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val squareSize = size.width / 8f
+            for (rowIndex in 0..7) {
+                for (colIndex in 0..7) {
+                    val square = squareFromGrid(colIndex, rowIndex, flipped) ?: continue
+                    val squareColor = SquareColor.of(square)
+                    val color = if (squareColor == SquareColor.LIGHT) BoardLightSquare else BoardDarkSquare
+                    drawRect(
+                        color = color,
+                        topLeft = Offset(colIndex * squareSize, rowIndex * squareSize),
+                        size = Size(squareSize, squareSize),
+                    )
+                }
+            }
+            selectedSquare?.let { selected ->
+                val colIndex = gridCol(selected.file, flipped)
+                val rowIndex = gridRow(selected.rank, flipped)
+                val topLeft = Offset(colIndex * squareSize, rowIndex * squareSize)
                 drawRect(
-                    color = color,
-                    topLeft = Offset(colIndex * squareSize, rowIndex * squareSize),
+                    color = Accent.copy(alpha = 0.42f),
+                    topLeft = topLeft,
                     size = Size(squareSize, squareSize),
+                )
+                val strokeWidth = 3.dp.toPx()
+                val inset = strokeWidth / 2f
+                drawRect(
+                    color = Accent,
+                    topLeft = Offset(topLeft.x + inset, topLeft.y + inset),
+                    size = Size(squareSize - strokeWidth, squareSize - strokeWidth),
+                    style = Stroke(width = strokeWidth),
                 )
             }
         }
 
-        val markerRadius = squareSize * 0.18f
-        arrows.forEach { arrow ->
-            drawMoveArrow(
-                from = squareCenter(arrow.from, squareSize),
-                to = squareCenter(arrow.to, squareSize),
-                squareSize = squareSize,
-                markerRadius = markerRadius,
-            )
-        }
-        visitedSquares(arrows).forEach { square ->
-            drawCircle(
-                color = BoardArrow,
-                radius = markerRadius,
-                center = squareCenter(square, squareSize),
-            )
+        BoardPieces(pieces = pieces, flipped = flipped)
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val squareSize = size.width / 8f
+            val arrowColor = BoardArrow.copy(alpha = ArrowAlpha)
+            val markerRadius = squareSize * 0.18f
+            arrows.forEach { arrow ->
+                drawMoveArrow(
+                    from = squareCenter(arrow.from, squareSize, flipped),
+                    to = squareCenter(arrow.to, squareSize, flipped),
+                    squareSize = squareSize,
+                    markerRadius = markerRadius,
+                    color = arrowColor,
+                )
+            }
+            arrows.map { it.to }.distinct().forEach { square ->
+                drawCircle(
+                    color = arrowColor,
+                    radius = squareSize * ArrivalCircleDiameterFactor / 2f,
+                    center = squareCenter(square, squareSize, flipped),
+                    style = Stroke(width = 3.dp.toPx()),
+                )
+            }
+
+            highlight?.let {
+                val colIndex = gridCol(it.square.file, flipped)
+                val rowIndex = gridRow(it.square.rank, flipped)
+                val accent = if (it.correct) Correct else Incorrect
+                val topLeft = Offset(colIndex * squareSize, rowIndex * squareSize)
+                val square = Size(squareSize, squareSize)
+                drawRect(
+                    color = accent.copy(alpha = 0.72f),
+                    topLeft = topLeft,
+                    size = square,
+                )
+                val strokeWidth = 4.dp.toPx()
+                val inset = strokeWidth / 2f
+                drawRect(
+                    color = accent,
+                    topLeft = Offset(topLeft.x + inset, topLeft.y + inset),
+                    size = Size(squareSize - strokeWidth, squareSize - strokeWidth),
+                    style = Stroke(width = strokeWidth),
+                )
+            }
         }
 
-        highlight?.let {
-            val colIndex = it.square.file - 'a'
-            val rowIndex = 8 - it.square.rank
-            val accent = if (it.correct) Correct else Incorrect
-            val topLeft = Offset(colIndex * squareSize, rowIndex * squareSize)
-            val square = Size(squareSize, squareSize)
-            drawRect(
-                color = accent.copy(alpha = 0.72f),
-                topLeft = topLeft,
-                size = square,
-            )
-            val strokeWidth = 4.dp.toPx()
-            val inset = strokeWidth / 2f
-            drawRect(
-                color = accent,
-                topLeft = Offset(topLeft.x + inset, topLeft.y + inset),
-                size = Size(squareSize - strokeWidth, squareSize - strokeWidth),
-                style = Stroke(width = strokeWidth),
-            )
+        if (onSquareClick != null) {
+            BoardTapOverlay(onSquareClick = onSquareClick, flipped = flipped)
         }
     }
 }
 
-private fun squareCenter(square: Square, squareSize: Float): Offset {
-    val colIndex = square.file - 'a'
-    val rowIndex = 8 - square.rank
+@Composable
+private fun BoardTapOverlay(
+    onSquareClick: (Square) -> Unit,
+    flipped: Boolean,
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        ranks(flipped).forEach { rank ->
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+            ) {
+                files(flipped).forEach { file ->
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                            ) { onSquareClick(Square(file, rank)) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BoardPieces(
+    pieces: List<OccupiedSquare>,
+    flipped: Boolean,
+) {
+    if (pieces.isEmpty()) return
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val squareDp = maxWidth / 8
+        pieces.forEach { piece ->
+            val col = gridCol(piece.square.file, flipped)
+            val row = gridRow(piece.square.rank, flipped)
+            Box(
+                modifier = Modifier
+                    .offset(x = squareDp * col, y = squareDp * row)
+                    .size(squareDp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = pieceGlyph(piece.man),
+                    color = if (piece.isWhite) BoardPieceWhite else BoardPieceBlack,
+                    fontSize = (squareDp.value * PieceFontFactor).sp,
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Center,
+                    style = TextStyle(
+                        shadow = Shadow(
+                            color = if (piece.isWhite) Color(0xFF111111) else Color(0xDDEDE6D6),
+                            offset = Offset.Zero,
+                            blurRadius = if (piece.isWhite) 5f else 8f,
+                        ),
+                    ),
+                )
+            }
+        }
+    }
+}
+
+private fun pieceGlyph(man: ChessMan): String {
+    val glyph = when (man) {
+        ChessMan.KING -> "\u265A"
+        ChessMan.QUEEN -> "\u265B"
+        ChessMan.ROOK -> "\u265C"
+        ChessMan.BISHOP -> "\u265D"
+        ChessMan.KNIGHT -> "\u265E"
+        ChessMan.PAWN -> "\u265F"
+    }
+    return glyph + "\uFE0E"
+}
+
+private fun squareCenter(square: Square, squareSize: Float, flipped: Boolean): Offset {
+    val colIndex = gridCol(square.file, flipped)
+    val rowIndex = gridRow(square.rank, flipped)
     return Offset(
         x = colIndex * squareSize + squareSize / 2f,
         y = rowIndex * squareSize + squareSize / 2f,
@@ -189,6 +350,7 @@ private fun DrawScope.drawMoveArrow(
     to: Offset,
     squareSize: Float,
     markerRadius: Float,
+    color: Color,
 ) {
     val dx = to.x - from.x
     val dy = to.y - from.y
@@ -233,12 +395,13 @@ private fun DrawScope.drawMoveArrow(
         )
         close()
     }
-    drawPath(path = path, color = BoardArrow)
+    drawPath(path = path, color = color)
 }
 
 @Composable
 private fun FileNotationRow(
     boardWidth: Dp,
+    flipped: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -247,7 +410,7 @@ private fun FileNotationRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(modifier = Modifier.width(NotationSize))
-        FILES.forEach { file ->
+        files(flipped).forEach { file ->
             Text(
                 text = file.toString(),
                 modifier = Modifier.weight(1f),
@@ -263,6 +426,7 @@ private fun FileNotationRow(
 @Composable
 private fun RankNotationColumn(
     boardHeight: Dp,
+    flipped: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -270,7 +434,7 @@ private fun RankNotationColumn(
         verticalArrangement = Arrangement.SpaceEvenly,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        RANKS.forEach { rank ->
+        ranks(flipped).forEach { rank ->
             Text(
                 text = rank.toString(),
                 color = BoardNotation,

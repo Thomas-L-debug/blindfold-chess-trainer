@@ -1,20 +1,21 @@
 package com.blindfoldchess.trainer.feature.drills
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -24,84 +25,90 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.blindfoldchess.trainer.R
-import com.blindfoldchess.trainer.core.chess.SquareColor
+import com.blindfoldchess.trainer.core.chess.Square
 import com.blindfoldchess.trainer.feature.board.SquareHighlight
 import com.blindfoldchess.trainer.ui.theme.Correct
 import com.blindfoldchess.trainer.ui.theme.Incorrect
 import kotlinx.coroutines.delay
 
-private const val SQUARE_HIGHLIGHT_MS = 500L
+private const val LEGAL_HIGHLIGHT_MS = 500L
+private const val ILLEGAL_HIGHLIGHT_MS = 800L
 
 @Composable
-fun SquareColorDrillScreen(
+fun FindSquareScreen(
     onBack: () -> Unit,
     onSquareHighlight: (SquareHighlight?) -> Unit = {},
-    viewModel: SquareColorDrillViewModel = viewModel(),
+    onSquareClickChange: (((Square) -> Unit)?) -> Unit = {},
+    viewModel: FindSquareViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val tapHandler = remember<(Square) -> Unit>(viewModel) {
+        { square -> viewModel.onSquareTap(square) }
+    }
 
-    LaunchedEffect(uiState.answered, uiState.question, uiState.wasCorrect) {
-        val question = uiState.question
-        val wasCorrect = uiState.wasCorrect
-        if (!uiState.answered || question == null || wasCorrect == null) {
+    LaunchedEffect(uiState.flashToken, uiState.wasCorrect, uiState.lastAttempt, uiState.target) {
+        val attempt = uiState.lastAttempt
+        val correct = uiState.wasCorrect
+        if (uiState.flashToken == 0 || attempt == null || correct == null) {
             onSquareHighlight(null)
             return@LaunchedEffect
         }
-        onSquareHighlight(SquareHighlight(question.square, correct = wasCorrect))
-        delay(SQUARE_HIGHLIGHT_MS)
-        onSquareHighlight(null)
-        viewModel.loadNextQuestion()
+        val highlighted = if (correct) uiState.target ?: attempt else attempt
+        onSquareHighlight(SquareHighlight(highlighted, correct = correct))
+        if (correct) {
+            delay(LEGAL_HIGHLIGHT_MS)
+            onSquareHighlight(null)
+            viewModel.loadNextQuestion()
+        } else {
+            delay(ILLEGAL_HIGHLIGHT_MS)
+            onSquareHighlight(null)
+            viewModel.unlockRetry()
+        }
+    }
+
+    LaunchedEffect(uiState.answered, tapHandler) {
+        onSquareClickChange(if (uiState.answered) null else tapHandler)
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            onSquareClickChange(null)
+            onSquareHighlight(null)
+        }
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         DrillPageHeader(
-            title = stringResource(R.string.drill_square_color_title),
-            description = stringResource(R.string.drill_square_color_description),
+            title = stringResource(R.string.drill_find_square_title),
+            description = stringResource(R.string.drill_find_square_description),
             onHome = onBack,
         )
 
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = uiState.question?.square?.algebraic.orEmpty(),
+            text = uiState.target?.algebraic?.uppercase().orEmpty().ifEmpty { " " },
             fontSize = 72.sp,
             fontWeight = FontWeight.Light,
             color = MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
         )
 
-        Spacer(modifier = Modifier.height(48.dp))
-
-        Row(
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = stringResource(R.string.find_square_hint),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            OutlinedButton(
-                onClick = { viewModel.onAnswer(SquareColor.LIGHT) },
-                enabled = !uiState.answered,
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(stringResource(R.string.answer_light))
-            }
-            OutlinedButton(
-                onClick = { viewModel.onAnswer(SquareColor.DARK) },
-                enabled = !uiState.answered,
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(stringResource(R.string.answer_dark))
-            }
-        }
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
         val feedbackColor = when (uiState.wasCorrect) {
@@ -112,7 +119,7 @@ fun SquareColorDrillScreen(
         Text(
             text = when (uiState.wasCorrect) {
                 true -> stringResource(R.string.feedback_correct)
-                false -> stringResource(R.string.feedback_incorrect)
+                false -> stringResource(R.string.find_square_incorrect)
                 null -> " "
             },
             style = MaterialTheme.typography.titleMedium,
@@ -121,7 +128,7 @@ fun SquareColorDrillScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Text(
             text = stringResource(
@@ -132,7 +139,6 @@ fun SquareColorDrillScreen(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        }
 
         Spacer(modifier = Modifier.height(16.dp))
         DrillBackButton(onClick = onBack)

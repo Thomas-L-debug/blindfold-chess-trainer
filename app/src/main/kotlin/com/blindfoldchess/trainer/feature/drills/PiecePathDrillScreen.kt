@@ -7,20 +7,20 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -38,21 +38,8 @@ import com.blindfoldchess.trainer.ui.theme.Correct
 import com.blindfoldchess.trainer.ui.theme.Incorrect
 import kotlinx.coroutines.delay
 
-private const val SQUARE_HIGHLIGHT_MS = 500L
-
-private val FILE_ROWS = listOf(
-    listOf('a', 'e'),
-    listOf('b', 'f'),
-    listOf('c', 'g'),
-    listOf('d', 'h'),
-)
-
-private val RANK_ROWS = listOf(
-    listOf(1, 5),
-    listOf(2, 6),
-    listOf(3, 7),
-    listOf(4, 8),
-)
+private const val LEGAL_HIGHLIGHT_MS = 500L
+private const val ILLEGAL_HIGHLIGHT_MS = 1500L
 
 @Composable
 fun PiecePathDrillScreen(
@@ -63,20 +50,37 @@ fun PiecePathDrillScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.start, uiState.path) {
-        onMoveArrows(arrowsAlong(uiState.start, uiState.path))
-    }
-
-    LaunchedEffect(uiState.flashToken) {
-        val square = uiState.lastMoveSquare
+    LaunchedEffect(
+        uiState.flashToken,
+        uiState.start,
+        uiState.path,
+        uiState.lastMoveLegal,
+        uiState.lastMoveSquare,
+        uiState.lastMoveFrom,
+    ) {
+        val dest = uiState.lastMoveSquare
         val legal = uiState.lastMoveLegal
-        if (uiState.flashToken == 0 || square == null || legal == null) {
+        val from = uiState.lastMoveFrom
+
+        fun showPathArrows() {
+            onMoveArrows(arrowsAlong(uiState.start, uiState.path))
+        }
+
+        if (uiState.flashToken == 0 || dest == null || legal == null) {
             onSquareHighlight(null)
+            showPathArrows()
             return@LaunchedEffect
         }
-        onSquareHighlight(SquareHighlight(square, correct = legal))
-        delay(SQUARE_HIGHLIGHT_MS)
+
+        onSquareHighlight(SquareHighlight(dest, correct = legal))
+        if (!legal) {
+            onMoveArrows(listOf(BoardArrow(from ?: dest, dest)))
+        } else {
+            showPathArrows()
+        }
+        delay(if (legal) LEGAL_HIGHLIGHT_MS else ILLEGAL_HIGHLIGHT_MS)
         onSquareHighlight(null)
+        showPathArrows()
     }
 
     Column(
@@ -86,19 +90,10 @@ fun PiecePathDrillScreen(
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = stringResource(R.string.drill_piece_path_title),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = stringResource(R.string.drill_piece_path_description),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
+        DrillPageHeader(
+            title = stringResource(R.string.drill_piece_path_title),
+            description = stringResource(R.string.drill_piece_path_description),
+            onHome = onBack,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -132,52 +127,72 @@ fun PiecePathDrillScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
-        val pathStart = uiState.start
-        if (uiState.path.isNotEmpty() && pathStart != null) {
-            val trail = (listOf(pathStart) + uiState.path)
-                .joinToString(" → ") { it.algebraic }
-            Text(
-                text = trail,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 4.dp),
-            )
+        var showIllegal by remember { mutableStateOf(false) }
+        LaunchedEffect(uiState.flashToken, uiState.illegal) {
+            if (uiState.illegal) {
+                showIllegal = true
+                delay(ILLEGAL_HIGHLIGHT_MS)
+                showIllegal = false
+            } else {
+                showIllegal = false
+            }
         }
+
+        val pathStart = uiState.start
+        val trail = if (uiState.path.isNotEmpty() && pathStart != null) {
+            (listOf(pathStart) + uiState.path).joinToString(" → ") { it.algebraic }
+        } else {
+            " "
+        }
+        Text(
+            text = trail,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (trail.isBlank()) {
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0f)
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp),
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        when {
-            uiState.solved -> {
-                Text(
-                    text = stringResource(R.string.feedback_correct),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Correct,
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Button(onClick = viewModel::loadNextPuzzle) {
-                    Text(stringResource(R.string.next_question))
-                }
-            }
-            uiState.illegal -> {
-                Text(
-                    text = stringResource(R.string.feedback_illegal_move),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Incorrect,
-                    textAlign = TextAlign.Center,
-                )
-            }
+        val feedback = when {
+            uiState.solved -> stringResource(R.string.feedback_correct)
+            showIllegal -> stringResource(R.string.feedback_illegal_move)
+            else -> " "
+        }
+        Text(
+            text = feedback,
+            style = MaterialTheme.typography.titleMedium,
+            color = when {
+                uiState.solved -> Correct
+                showIllegal -> Incorrect
+                else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0f)
+            },
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(
+            onClick = viewModel::loadNextPuzzle,
+            enabled = uiState.solved,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.next_question))
         }
 
-        if (!uiState.solved) {
-            Spacer(modifier = Modifier.height(16.dp))
-            CoordinatePad(
-                pendingFile = uiState.pendingFile,
-                enabled = uiState.start != null,
-                onFile = viewModel::onFile,
-                onRank = viewModel::onRank,
-            )
-        }
+        Spacer(modifier = Modifier.height(16.dp))
+        CoordinatePad(
+            pendingFile = uiState.pendingFile,
+            enabled = uiState.start != null && !uiState.solved,
+            onFile = viewModel::onFile,
+            onRank = viewModel::onRank,
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -192,17 +207,7 @@ fun PiecePathDrillScreen(
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = onBack,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            ),
-        ) {
-            Text("Back")
-        }
-
+        DrillBackButton(onClick = onBack)
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
@@ -239,93 +244,6 @@ private fun PieceSelector(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun CoordinatePad(
-    pendingFile: Char?,
-    enabled: Boolean,
-    onFile: (Char) -> Unit,
-    onRank: (Int) -> Unit,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(20.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            FILE_ROWS.forEach { row ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    row.forEach { file ->
-                        CoordinateButton(
-                            label = file.toString(),
-                            selected = pendingFile == file,
-                            enabled = enabled,
-                            modifier = Modifier.weight(1f),
-                            onClick = { onFile(file) },
-                        )
-                    }
-                }
-            }
-        }
-
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            RANK_ROWS.forEach { row ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    row.forEach { rank ->
-                        CoordinateButton(
-                            label = rank.toString(),
-                            selected = false,
-                            enabled = enabled && pendingFile != null,
-                            modifier = Modifier.weight(1f),
-                            onClick = { onRank(rank) },
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CoordinateButton(
-    label: String,
-    selected: Boolean,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val buttonModifier = modifier.heightIn(min = 48.dp)
-    if (selected) {
-        Button(
-            onClick = onClick,
-            enabled = enabled,
-            modifier = buttonModifier,
-            contentPadding = ButtonDefaults.ContentPadding,
-        ) {
-            Text(label, fontWeight = FontWeight.SemiBold)
-        }
-    } else {
-        OutlinedButton(
-            onClick = onClick,
-            enabled = enabled,
-            modifier = buttonModifier,
-        ) {
-            Text(label)
         }
     }
 }

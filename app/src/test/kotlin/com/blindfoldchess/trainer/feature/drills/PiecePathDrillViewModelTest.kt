@@ -26,6 +26,8 @@ class PiecePathDrillViewModelTest {
         assertTrue(state.illegal)
         assertFalse(state.solved)
         assertTrue(state.path.isEmpty())
+        assertEquals(start, state.lastMoveFrom)
+        assertEquals("f6", state.lastMoveSquare?.algebraic)
         assertEquals(0, state.correctCount)
         assertEquals(1, state.totalCount)
     }
