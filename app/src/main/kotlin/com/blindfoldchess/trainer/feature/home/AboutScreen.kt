@@ -29,6 +29,7 @@ fun AboutScreen(
     val uriHandler = LocalUriHandler.current
     val sourceUrl = stringResource(R.string.about_source_url)
     val licenseUrl = stringResource(R.string.about_license_url)
+    val privacyUrl = stringResource(R.string.about_privacy_url)
 
     Column(
         modifier = Modifier
@@ -79,6 +80,15 @@ fun AboutScreen(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(stringResource(R.string.about_license))
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedButton(
+            onClick = { uriHandler.openUri(privacyUrl) },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.about_privacy))
         }
 
         Spacer(modifier = Modifier.height(16.dp))

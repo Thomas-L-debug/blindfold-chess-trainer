@@ -43,6 +43,7 @@ Goal: peaceful, pleasant training at the user's own pace.
 | Mode « Play the Bot » | ✅ | Stockfish, Elo 1350–2500 ; Continue/Discard if a game is in progress ; last bot move large ; Play again |
 | Voice input | ✅ | Android `SpeechRecognizer` (free) ; Speak + FR/EN ; Free Board, Play the Bot, Piece Path, Name the Square |
 | About / license | ✅ | Home link ; GPLv3 notice + GitHub source |
+| Privacy policy | ✅ | `docs/PRIVACY.md` (EN+FR) ; About screen + Play URL |
 | Pieces / Flip / Arrows / Coordinates | ✅ | Unicode glyphs, orientation, path arrows |
 | Board visibility | ✅ | Hidden at launch and on Home ; Find the Square, Name the Square, and Famous Games play open it |
 | Native Stockfish | ✅ | Vendored sf_15, JNI/UCI |
@@ -138,6 +139,8 @@ core/chess/src/main/kotlin/.../
 ├── GameFollowDrill.kt
 └── ChessSpeechParser.kt           # FR/EN speech → SAN / square (S→F, j'ai→G, pawn takes dest, castle aliases)
 ```
+
+`docs/PRIVACY.md` — Play Store privacy policy (English + French).
 
 **Tests (130 total, all passing):**
 - `core:chess` (51) — `ChessSessionTest` (18), `ChessSpeechParserTest` (9), `GameFollowDrillTest` (8), `PieceMovesTest` (7), `SquareColorTest` (6), `FindSquareDrillTest` (3)
@@ -255,6 +258,7 @@ Avoid unless needed for Docker/terminal. `settings.gradle.kts` auto-fixes `local
 - [x] **Voice input** — Android SpeechRecognizer, FR/EN, Free Board / Play the Bot / Piece Path / Name the Square
 - [x] **Name the Square drill** — green highlight, pad or voice, board forced visible
 - [x] **In-app About / license** — GPLv3 notice + GitHub source link from Home
+- [x] **Privacy policy** — microphone / SpeechRecognizer disclosed; no accounts or analytics
 - [ ] Hidden board state for blindfold mode (FEN + mental tracking without visual aid)
 - [ ] Session persistence (Room)
 

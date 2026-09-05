@@ -2,7 +2,7 @@
 
 A calm Android app for training chess **blindfolded** — pure mental visualization, no pressure, no dark patterns.
 
-**License: GPLv3** (required by vendoring Stockfish — see `NOTICE`). The app is intended for **free Play Store distribution**. Publishing the APK is “conveying” under GPLv3 §6, so anyone who receives it must be able to get the corresponding source. The GitHub repo is **public**, which covers that. An in-app **About & license** screen links to the repo and the `LICENSE` file.
+**License: GPLv3** (required by vendoring Stockfish — see `NOTICE`). The app is intended for **free Play Store distribution**. Publishing the APK is “conveying” under GPLv3 §6, so anyone who receives it must be able to get the corresponding source. The GitHub repo is **public**, which covers that. An in-app **About & license** screen links to the repo, the `LICENSE` file, and the [privacy policy](docs/PRIVACY.md).
 
 Full session context: [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md)
 
@@ -26,7 +26,7 @@ Branch: `main`.
 | **Free Board** drill | ✅ | Legal play, pad, tap, **voice** FR/EN; illegal move rejected, last legal position kept |
 | **Play the Bot** | ✅ | Local Stockfish, 7 Elo levels (1350–2500); Continue / Discard if a game is in progress; last bot move large; **Play again** |
 | Voice input | ✅ | Free Android `SpeechRecognizer`; Speak + FR/EN; Free Board, Play the Bot, Piece Path, Name the Square |
-| About / license | ✅ | Link at the bottom of Home; GPLv3 + GitHub sources |
+| About / license | ✅ | Link at the bottom of Home; GPLv3 + GitHub sources + privacy policy |
 | Pieces / Flip / Arrows / Coordinates | ✅ | Unicode glyphs, orientation, arrows, notation |
 | Board visibility | ✅ | Hidden at launch and when returning Home; Find the Square, Name the Square, and Famous Games (Play this game) open it |
 | Native Stockfish | ✅ | Vendored sf_15, JNI/UCI, `libstockfishjni.so` |
@@ -258,7 +258,7 @@ The APK is written to `app/build/outputs/apk/debug/` on your disk (mounted volum
 7. **Famous Games** — 6 cards (same style as Home); Play this game opens the board; one announced move at a time.
 8. **Free Board** — pad (lowercase files, frames at 50% opacity), tap, **Speak**. Side to move and draft on one line (`White to move - NF3`). Illegal: rejected, position unchanged.
 9. **Play the Bot** — Elo/color setup; if a game is in progress: Continue / Discard. Last bot move large; *White to move · Bot is thinking…*; checkmate/stalemate + Play again on the same row. Voice same as Free Board.
-10. **About & license** — quiet link at the bottom of Home: GPLv3, Stockfish, chesslib, buttons to the repo and the LICENSE file.
+10. **About & license** — quiet link at the bottom of Home: GPLv3, Stockfish, chesslib, buttons to the repo, the LICENSE file, and the privacy policy.
 11. **Back / home cube** — return Home (board hidden).
 
 To check Square Colors: `a1` is **dark**, `a2` is **light**, `e4` is **light**.  

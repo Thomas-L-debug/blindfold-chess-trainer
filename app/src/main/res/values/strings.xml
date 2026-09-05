@@ -23,13 +23,15 @@
     <string name="action_home">Home</string>
     <string name="about_entry">About &amp; license</string>
     <string name="about_title">About</string>
-    <string name="about_description">License and source code</string>
+    <string name="about_description">License, source, and privacy</string>
     <string name="about_body">This app is free software under the GNU General Public License v3. You can use, share, and change it under that license.</string>
     <string name="about_components">It includes Stockfish (GPLv3) and chesslib (Apache 2.0).</string>
     <string name="about_source">Source code</string>
     <string name="about_license">GNU GPLv3</string>
+    <string name="about_privacy">Privacy policy</string>
     <string name="about_source_url">https://github.com/Thomas-L-debug/blindfold-chess-trainer</string>
     <string name="about_license_url">https://github.com/Thomas-L-debug/blindfold-chess-trainer/blob/main/LICENSE</string>
+    <string name="about_privacy_url">https://github.com/Thomas-L-debug/blindfold-chess-trainer/blob/main/docs/PRIVACY.md</string>
     <string name="drill_piece_path_title">Piece Path</string>
     <string name="drill_piece_path_description">Reach the target with legal moves</string>
     <string name="piece_bishop">Bishop</string>
