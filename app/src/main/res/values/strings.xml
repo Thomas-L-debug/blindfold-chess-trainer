@@ -7,6 +7,10 @@
     <string name="drill_find_square_description">A coordinate is shown — tap that square on the board</string>
     <string name="find_square_hint">Tap the matching square</string>
     <string name="find_square_incorrect">Not quite — try again</string>
+    <string name="drill_name_square_title">Name the Square</string>
+    <string name="drill_name_square_description">A square lights up — enter its coordinates</string>
+    <string name="name_square_hint">Name the highlighted square</string>
+    <string name="name_square_unclear">Couldn’t understand that square — try again</string>
     <string name="drill_square_color_title">Square Colors</string>
     <string name="drill_square_color_description">Is this square light or dark?</string>
     <string name="answer_light">Light</string>
@@ -17,6 +21,15 @@
     <string name="next_question">Next</string>
     <string name="start_drill">Start drill</string>
     <string name="action_home">Home</string>
+    <string name="about_entry">About &amp; license</string>
+    <string name="about_title">About</string>
+    <string name="about_description">License and source code</string>
+    <string name="about_body">This app is free software under the GNU General Public License v3. You can use, share, and change it under that license.</string>
+    <string name="about_components">It includes Stockfish (GPLv3) and chesslib (Apache 2.0).</string>
+    <string name="about_source">Source code</string>
+    <string name="about_license">GNU GPLv3</string>
+    <string name="about_source_url">https://github.com/Thomas-L-debug/blindfold-chess-trainer</string>
+    <string name="about_license_url">https://github.com/Thomas-L-debug/blindfold-chess-trainer/blob/main/LICENSE</string>
     <string name="drill_piece_path_title">Piece Path</string>
     <string name="drill_piece_path_description">Reach the target with legal moves</string>
     <string name="piece_bishop">Bishop</string>

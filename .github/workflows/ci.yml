@@ -33,7 +33,7 @@ jobs:
         uses: android-actions/setup-android@v4
 
       - name: Install Android SDK packages
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;28.2.13676358" "cmake;3.22.1"
+        run: sdkmanager "platforms;android-36" "build-tools;35.0.0" "ndk;28.2.13676358" "cmake;3.22.1"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -43,6 +43,9 @@ jobs:
 
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Build release bundle and check 16 KB page size
+        run: ./gradlew :app:bundleRelease :app:checkReleasePageSize --no-daemon --stacktrace
 
       - name: Upload debug APK
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

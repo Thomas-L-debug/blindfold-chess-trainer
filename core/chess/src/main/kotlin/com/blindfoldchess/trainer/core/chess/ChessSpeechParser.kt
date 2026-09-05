@@ -24,8 +24,20 @@ object ChessSpeechParser {
         if (tail.length == 2 && tail[0] == 's' && tail[1] in '1'..'8') {
             Square.fromAlgebraic("f${tail[1]}")?.let { return it }
         }
+        frenchGHomophoneSquare(compact)?.let { return it }
         return Regex("([a-h][1-8])").findAll(prepared).lastOrNull()
             ?.let { Square.fromAlgebraic(it.groupValues[1]) }
+    }
+
+    /** French STT often writes G-file as "j'ai" ("j'ai un" → g1). */
+    private fun frenchGHomophoneSquare(compact: String): Square? {
+        val match = Regex("jai(un|une|[1-8])$").find(compact) ?: return null
+        val rankToken = match.groupValues[1]
+        val rank = when (rankToken) {
+            "un", "une" -> 1
+            else -> rankToken.toInt()
+        }
+        return Square.fromAlgebraic("g$rank")
     }
 
     fun candidates(utterance: String): List<String> {
@@ -99,6 +111,15 @@ object ChessSpeechParser {
         }
         Regex("^s([1-8])$").matchEntire(word)?.let {
             return listOf("f", it.groupValues[1])
+        }
+        Regex("^j([1-8])$").matchEntire(word)?.let {
+            return listOf("g", it.groupValues[1])
+        }
+        Regex("^jai([1-8])$").matchEntire(word)?.let {
+            return listOf("g", it.groupValues[1])
+        }
+        Regex("^jai(un|une)$").matchEntire(word)?.let {
+            return listOf("g", "1")
         }
         Regex("^([kqrbn])s([1-8])$").matchEntire(word)?.let {
             return listOf(it.groupValues[1].uppercase(), "f", it.groupValues[2])
@@ -312,6 +333,7 @@ object ChessSpeechParser {
         "petit rock" to "O-O",
         "roque court" to "O-O",
         "rock court" to "O-O",
+        "j ai" to "g",
     )
 
     private val DROP = setOf(
@@ -392,6 +414,10 @@ object ChessSpeechParser {
         "s" to "f",
         "ess" to "f",
         "gee" to "g",
+        "j" to "g",
+        "jai" to "g",
+        "jay" to "g",
+        "ai" to "",
         "aitch" to "h",
         "haitch" to "h",
         "hache" to "h",

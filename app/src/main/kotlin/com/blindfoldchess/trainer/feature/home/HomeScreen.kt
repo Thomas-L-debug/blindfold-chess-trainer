@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,11 +23,13 @@ import com.blindfoldchess.trainer.ui.ActionCard
 @Composable
 fun HomeScreen(
     onStartFindSquareDrill: () -> Unit,
+    onStartNameSquareDrill: () -> Unit,
     onStartSquareColorDrill: () -> Unit,
     onStartPiecePathDrill: () -> Unit,
     onStartFamousGamesDrill: () -> Unit,
     onStartFreeBoardDrill: () -> Unit,
     onStartPlayBotDrill: () -> Unit,
+    onOpenAbout: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -64,6 +67,15 @@ fun HomeScreen(
             description = stringResource(R.string.drill_find_square_description),
             actionLabel = stringResource(R.string.start_drill),
             onAction = onStartFindSquareDrill,
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        ActionCard(
+            title = stringResource(R.string.drill_name_square_title),
+            description = stringResource(R.string.drill_name_square_description),
+            actionLabel = stringResource(R.string.start_drill),
+            onAction = onStartNameSquareDrill,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -110,6 +122,16 @@ fun HomeScreen(
             actionLabel = stringResource(R.string.start_drill),
             onAction = onStartPlayBotDrill,
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TextButton(onClick = onOpenAbout) {
+            Text(
+                text = stringResource(R.string.about_entry),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
     }

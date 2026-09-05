@@ -20,13 +20,15 @@ import com.blindfoldchess.trainer.feature.board.SquareHighlight
 import com.blindfoldchess.trainer.feature.drills.FamousGamesScreen
 import com.blindfoldchess.trainer.feature.drills.FindSquareScreen
 import com.blindfoldchess.trainer.feature.drills.FreeBoardScreen
+import com.blindfoldchess.trainer.feature.drills.NameSquareScreen
 import com.blindfoldchess.trainer.feature.drills.PlayBotScreen
 import com.blindfoldchess.trainer.feature.drills.PiecePathDrillScreen
 import com.blindfoldchess.trainer.feature.drills.SquareColorDrillScreen
+import com.blindfoldchess.trainer.feature.home.AboutScreen
 import com.blindfoldchess.trainer.feature.home.HomeScreen
 import com.blindfoldchess.trainer.ui.theme.BlindfoldChessTheme
 
-private enum class AppScreen { Home, FindSquare, SquareColor, PiecePath, FamousGames, FreeBoard, PlayBot }
+private enum class AppScreen { Home, About, FindSquare, NameSquare, SquareColor, PiecePath, FamousGames, FreeBoard, PlayBot }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,6 +84,13 @@ class MainActivity : ComponentActivity() {
                                     isBoardVisible = true
                                     screen = AppScreen.FindSquare
                                 },
+                                onStartNameSquareDrill = {
+                                    moveArrows = emptyList()
+                                    boardPieces = emptyList()
+                                    selectedSquare = null
+                                    isBoardVisible = true
+                                    screen = AppScreen.NameSquare
+                                },
                                 onStartSquareColorDrill = {
                                     moveArrows = emptyList()
                                     screen = AppScreen.SquareColor
@@ -99,11 +108,17 @@ class MainActivity : ComponentActivity() {
                                     moveArrows = emptyList()
                                     screen = AppScreen.PlayBot
                                 },
+                                onOpenAbout = { screen = AppScreen.About },
                             )
+                            AppScreen.About -> AboutScreen(onBack = goHome)
                             AppScreen.FindSquare -> FindSquareScreen(
                                 onBack = goHome,
                                 onSquareHighlight = { squareHighlight = it },
                                 onSquareClickChange = { onBoardSquareClick = it },
+                            )
+                            AppScreen.NameSquare -> NameSquareScreen(
+                                onBack = goHome,
+                                onSquareHighlight = { squareHighlight = it },
                             )
                             AppScreen.SquareColor -> SquareColorDrillScreen(
                                 onBack = goHome,

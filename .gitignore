@@ -9,6 +9,7 @@ local.properties.bak
 *.keystore
 *.jks
 keystore.properties
+keystore/
 captures/
 .externalNativeBuild
 .cxx

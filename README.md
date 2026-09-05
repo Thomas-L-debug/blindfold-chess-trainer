@@ -1,326 +1,338 @@
 # Blindfold Chess Trainer
 
-Application Android calme pour s'entraîner aux échecs à l'aveugle — visualisation mentale pure, sans stress ni dark patterns.
+A calm Android app for training chess **blindfolded** — pure mental visualization, no pressure, no dark patterns.
 
-**Licence : GPLv3** (imposée par le vendoring de Stockfish — voir `NOTICE`). L'app est destinée à une publication **gratuite sur le Play Store** ; publier l'APK est un acte de « conveying » au sens GPLv3 §6, donc quiconque le reçoit doit pouvoir obtenir le code source correspondant. Le dépôt GitHub est **public**, ce qui couvre cette obligation ; il reste à prévoir une mention de licence/lien vers les sources dans l'app elle-même (par ex. un écran « À propos »). L'ancienne mention « Dépôt privé — tous droits réservés » ne s'applique plus.
+**License: GPLv3** (required by vendoring Stockfish — see `NOTICE`). The app is intended for **free Play Store distribution**. Publishing the APK is “conveying” under GPLv3 §6, so anyone who receives it must be able to get the corresponding source. The GitHub repo is **public**, which covers that. An in-app **About & license** screen links to the repo and the `LICENSE` file.
 
-Contexte complet : [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md)
+Full session context: [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md)
 
 ---
 
-## Où en est le projet ? (5 septembre 2026)
+## Project status (5 September 2026)
 
-Workspace principal : `D:\CodingProject\blindfold-chess-trainer`  
-Branche : `main` (dernier commit `520f4ca`). Les changements récents (voix, cartes Famous Games, visibilité du plateau, Play the Bot resume, légalité SAN) sont dans l'arbre de travail, **pas encore commités**.
+Primary workspace: `D:\CodingProject\blindfold-chess-trainer`  
+Branch: `main`.
 
-| Élément | Statut | Notes |
+| Item | Status | Notes |
 |---|---|---|
-| Projet Android (Kotlin + Jetpack Compose) | ✅ | AGP 8.9.1, Kotlin 2.1.10, minSdk 26, targetSdk 35, NDK 28.2.13676358 |
-| Module `core:chess` | ✅ | `chesslib` via `ChessSession` ; `playSan` n'accepte que les coups de `legalMoves()` |
-| Écran d'accueil | ✅ | 6 cartes `ActionCard`, scrollable |
-| Drill **Find the Square** | ✅ | Coordonnée → tap sur la case ; ouvre le plateau au lancement |
-| Drill **Square Colors** | ✅ | Case aléatoire → Light / Dark, flash vert/rouge |
-| Drill **Piece Path** | ✅ | Fou / cavalier / tour / dame ; pavé **ou voix** ; coup illégal → reset + message ; reco floue → message sans reset |
-| Drill **Famous Games** | ✅ | Bibliothèque en cartes style accueil ; **Play this game** ouvre le plateau s'il est masqué |
-| Drill **Free Board** | ✅ | Coups légaux, pavé, tap, **voix** FR/EN ; coup illégal refusé, on reste sur la dernière position légale |
-| Mode **Play the Bot** | ✅ | Stockfish local, 7 Elo (1350–2500) ; Continue / Discard si une partie est en cours ; dernier coup du bot en grand ; **Play again** |
-| Saisie vocale | ✅ | `SpeechRecognizer` Android (gratuit) ; bouton Speak + FR/EN ; Free Board, Play the Bot, Piece Path |
-| Pièces / Flip / Arrows / Coordinates | ✅ | Glyphes Unicode, retournement, flèches, notation |
-| Visibilité du plateau | ✅ | Masqué au lancement et au retour accueil ; Find the Square et Famous Games (Play this game) l'ouvrent |
-| Moteur Stockfish natif | ✅ | sf_15 vendoré, JNI/UCI, `libstockfishjni.so` |
+| Android project (Kotlin + Jetpack Compose) | ✅ | AGP 8.9.1, Kotlin 2.1.10, minSdk 26, targetSdk **36**, NDK 28.2.13676358 |
+| Module `core:chess` | ✅ | `chesslib` via `ChessSession`; `playSan` only accepts `legalMoves()` |
+| Home screen | ✅ | 7 `ActionCard`s, scrollable |
+| **Find the Square** drill | ✅ | Coordinate → tap the square; opens the board on start |
+| **Name the Square** drill | ✅ | A square lights green → enter coordinates (pad or voice); opens the board on start |
+| **Square Colors** drill | ✅ | Random square → Light / Dark, green/red flash |
+| **Piece Path** drill | ✅ | Bishop / knight / rook / queen; pad **or voice**; illegal → reset + message; unclear speech → message, no reset |
+| **Famous Games** drill | ✅ | Library as home-style cards; **Play this game** shows the board if hidden |
+| **Free Board** drill | ✅ | Legal play, pad, tap, **voice** FR/EN; illegal move rejected, last legal position kept |
+| **Play the Bot** | ✅ | Local Stockfish, 7 Elo levels (1350–2500); Continue / Discard if a game is in progress; last bot move large; **Play again** |
+| Voice input | ✅ | Free Android `SpeechRecognizer`; Speak + FR/EN; Free Board, Play the Bot, Piece Path, Name the Square |
+| About / license | ✅ | Link at the bottom of Home; GPLv3 + GitHub sources |
+| Pieces / Flip / Arrows / Coordinates | ✅ | Unicode glyphs, orientation, arrows, notation |
+| Board visibility | ✅ | Hidden at launch and when returning Home; Find the Square, Name the Square, and Famous Games (Play this game) open it |
+| Native Stockfish | ✅ | Vendored sf_15, JNI/UCI, `libstockfishjni.so` |
 | `LICENSE` / `NOTICE` | ✅ | GPLv3 (Stockfish) |
-| Tests unitaires | ✅ | **116** tests, tous verts (`:core:chess:testDebugUnitTest` + `:app:testDebugUnitTest`) |
-| CI GitHub Actions | ✅ | NDK + CMake, tests + APK debug |
-| Room (historique de sessions) | ❌ | pas encore |
-| Preview web (`preview/`) | ⚠️ | Démo Square Colors seulement — **stale** |
+| Unit tests | ✅ | **130** tests (`:core:chess:testDebugUnitTest` + `:app:testDebugUnitTest`)
+| GitHub Actions CI | ✅ | NDK + CMake, tests + debug APK |
+| Room (session history) | ❌ | not started |
+| Web preview (`preview/`) | ⚠️ | Square Colors demo only — **stale** |
 
-**Ce que tu peux tester aujourd'hui :**
+**What you can try today:**
 
-1. **Find the Square** — coordonnée affichée → tape la case. Le plateau s'ouvre tout seul.
-2. **Square Colors** — case → *Light* / *Dark*. Vert 0,5 s / rouge 0,5 s. Score local, sans streak.
-3. **Piece Path** — pièce, départ → arrivée. Pavé ou **Speak** (`cavalier f 3`, ou juste `h6` / `S5`→f5). Illégal → reset + message. Reco floue (`P5`) → *Couldn't understand* sans reset.
-4. **Famous Games** — cartes de parties, **Play this game** (ouvre le plateau), rejouer chaque coup annoncé.
-5. **Free Board** — pavé, tap, ou voix (`e4`, `knight f3`, `pion prend F4`, `petit rock` / `castle`). Illégal → message, position inchangée.
-6. **Play the Bot** — Elo + couleur ; si une partie existe déjà : Continue / Discard. Dernier coup du bot en grand. Mat/pat + **Play again**. Voix comme Free Board.
+1. **Find the Square** — a coordinate is shown → tap that square. The board opens on its own.
+2. **Name the Square** — a square lights green → name it with the pad or **Speak** (`e4`, `e four`, `S5`→f5). The board opens on its own.
+3. **Square Colors** — a square → *Light* / *Dark*. Green 0.5 s / red 0.5 s. Local score, no streak.
+4. **Piece Path** — piece, start → target. Pad or **Speak** (`cavalier f 3`, or just `h6` / `S5`→f5). Illegal → reset + message. Unclear speech (`P5`) → *Couldn't understand* without reset.
+5. **Famous Games** — game cards, **Play this game** (opens the board), replay each announced move.
+6. **Free Board** — pad, tap, or voice (`e4`, `knight f3`, `pion prend F4`, `petit rock` / `castle`). Illegal → message, position unchanged.
+7. **Play the Bot** — Elo + color; if a game already exists: Continue / Discard. Last bot move large. Checkmate/stalemate + **Play again**. Voice same as Free Board.
 
 ---
 
-## Aperçu dans le navigateur (sans build Android)
+## Browser preview (no Android build)
 
-L'app Android **ne tourne pas nativement dans un navigateur** (c'est du Kotlin/Compose, pas du web). En revanche, une **démo web statique** reproduit l'UI actuelle pour voir où on en est visuellement :
+The Android app **does not run natively in a browser** (Kotlin/Compose, not web). A **static web demo** still exists for a rough visual check:
 
 ```bash
 cd /home/thomas/Projects/blindfold-chess-trainer
 python3 -m http.server 8080 --directory preview
 ```
 
-Puis ouvre : [http://localhost:8080](http://localhost:8080)
+Then open: [http://localhost:8080](http://localhost:8080)
 
-Tu peux aussi ouvrir directement `preview/index.html` dans Chrome/Firefox (double-clic). C'est la même logique de drill (*Square Colors*), mais ce n'est **pas** l'APK — juste un aperçu rapide.
+You can also open `preview/index.html` in Chrome/Firefox (double-click). It only covers the *Square Colors* drill — it is **not** the APK.
 
-Pour l'app réelle : Android Studio + émulateur, ou `./gradlew installDebug` sur un téléphone.
+For the real app: Android Studio + emulator, or `./gradlew installDebug` on a phone.
 
 ---
 
-## Prérequis
+## Prerequisites
 
-Choisis **une** des deux approches ci-dessous.
+Pick **one** of the two approaches below.
 
-### Option A — Gradle en local (recommandé si ça compile déjà)
+### Option A — local Gradle (recommended if it already compiles)
 
 - **JDK 21**
-- **Android SDK** (API 35, build-tools 35.0.0) — installé via Android Studio ou `sdkmanager`
-- Variable `ANDROID_HOME` pointant vers le SDK
+- **Android SDK** (API 35, build-tools 35.0.0) — via Android Studio or `sdkmanager`
+- `ANDROID_HOME` pointing at the SDK
 
-Vérification rapide :
+Quick check:
 
 ```bash
-java -version          # doit afficher 21
-echo $ANDROID_HOME     # ex. /home/thomas/Android/Sdk
+java -version          # should show 21
+echo $ANDROID_HOME     # e.g. /home/thomas/Android/Sdk
 ./gradlew --version
 ```
 
-### Option B — Docker (build reproductible, sans SDK local)
+### Option B — Docker (reproducible build, no local SDK)
 
 - Docker + Docker Compose
-- Utile pour compiler et lancer les tests sans installer le SDK sur la machine
+- Useful to compile and run tests without installing the SDK on the machine
 
 ---
 
-## Tester en local — étape par étape
+## Testing locally — step by step
 
-### 1. Cloner et entrer dans le projet
+### 1. Clone and enter the project
 
 ```bash
 cd /home/thomas/Projects/blindfold-chess-trainer
 ```
 
-### 2. Configurer le SDK Android (si pas déjà fait)
+### 2. Configure the Android SDK (if not already done)
 
 ```bash
 cp local.properties.example local.properties
-# Édite local.properties et mets le bon chemin vers ton Android SDK
+# Edit local.properties and set the path to your Android SDK
 ```
 
-### 3. Vérifier que tout compile (sans téléphone)
+### 3. Confirm it compiles (no phone needed)
 
 ```bash
 chmod +x gradlew
 ./gradlew test assembleDebug
 ```
 
-Si ça passe, tu obtiens l'APK ici :
+If that succeeds, the APK is here:
 
 ```
 app/build/outputs/apk/debug/app-debug.apk
 ```
 
-C'est le test le plus rapide pour confirmer que le code actuel fonctionne sur ton PC.
+This is the fastest check that the current code works on your PC.
 
-### 4. Lancer le module `app` (l'application Android)
+### 4. Run the `app` module (the Android application)
 
-#### C'est quoi le « module app » ?
+#### What is the “app module”?
 
-Ce projet contient **2 modules Gradle** :
+This project has **2 Gradle modules**:
 
-| Module | Rôle | Tu le lances ? |
+| Module | Role | Do you run it? |
 |---|---|---|
-| **`app`** | L'application Android (écrans, boutons) | **Oui** — c'est celui-ci |
-| **`core:chess`** | Bibliothèque de logique échecs (pas d'UI) | **Non** — juste une dépendance de `app` |
+| **`app`** | The Android application (screens, buttons) | **Yes** — this one |
+| **`core:chess`** | Chess logic library (no UI) | **No** — only a dependency of `app` |
 
-Quand on dit « Run sur le module app », ça veut dire : **compiler et installer l'APK sur un téléphone ou un émulateur**. Tu n'as rien à lancer sur `core:chess`.
+“Run the app module” means: **compile and install the APK on a phone or emulator**. You never launch `core:chess` on its own.
 
 ---
 
-#### Méthode 1 — Android Studio (recommandé sous WSL2)
+#### Method 1 — Android Studio (recommended under WSL2)
 
-**Où ouvrir le projet :** lance **Android Studio sur Windows** (pas dans le terminal WSL), puis ouvre le dossier du projet :
+**Where to open the project:** start **Android Studio on Windows** (not from a WSL terminal), then open the project folder:
 
 ```
 \\wsl$\Ubuntu\home\thomas\Projects\blindfold-chess-trainer
 ```
 
-*(Adapte `Ubuntu` si ta distro WSL a un autre nom — visible dans l'explorateur Windows → « Linux ».)*
+*(Change `Ubuntu` if your WSL distro has another name — see File Explorer → “Linux”.)*
 
-**Étapes une par une :**
+**Steps:**
 
-1. **File → Open** → sélectionne le dossier `blindfold-chess-trainer` (celui qui contient `build.gradle.kts`).
-2. Attends la fin du **Gradle Sync** (barre de progression en bas). Si Android Studio demande le SDK ou JDK 21, accepte les installs proposées.
-3. En haut à droite, vérifie la barre d'outils :
-   - Menu déroulant de config : choisis **`app`** (pas `core:chess`, pas un autre nom).
-   - Menu déroulant d'appareil : choisis un **émulateur** ou un **téléphone branché en USB**.
-4. Si aucun appareil n'apparaît :
-   - **Tools → Device Manager → Create Device** (ex. Pixel 7, API 35).
-   - Clique sur ▶ à côté de l'émulateur pour le démarrer.
-5. Clique sur le bouton vert **Run ▶** (ou `Shift+F10`).
+1. **File → Open** → select the `blindfold-chess-trainer` folder (the one that contains `build.gradle.kts`).
+2. Wait for **Gradle Sync** (progress bar at the bottom). If Android Studio offers SDK or JDK 21 installs, accept them.
+3. Top right, check the toolbar:
+   - Configuration dropdown: choose **`app`** (not `core:chess`).
+   - Device dropdown: choose an **emulator** or a **phone plugged in over USB**.
+4. If no device appears:
+   - **Tools → Device Manager → Create Device** (e.g. Pixel 7, API 35).
+   - Click ▶ next to the emulator to start it.
+5. Click the green **Run ▶** button (or `Shift+F10`).
 
-Android Studio exécute en interne l'équivalent de :
+Android Studio runs the equivalent of:
 
 ```bash
 ./gradlew :app:installDebug
 ```
 
-et lance l'app sur l'appareil sélectionné.
+and launches the app on the selected device.
 
-**Tu sais que ça marche si** l'émulateur s'ouvre et affiche l'écran « Blindfold Chess Trainer ».
+**You know it worked if** the emulator opens and shows the “Blindfold Chess Trainer” screen.
 
 ---
 
-#### Méthode 2 — Ligne de commande (WSL ou terminal)
+#### Method 2 — command line (WSL or terminal)
 
-Il te faut un **appareil déjà visible** par `adb` avant d'installer.
+You need a **device already visible** to `adb` before installing.
 
 ```bash
 cd /home/thomas/Projects/blindfold-chess-trainer
 
-# 1) Vérifier qu'un téléphone/émulateur est connecté
+# 1) Check that a phone/emulator is connected
 adb devices
-# Tu dois voir une ligne du type :
+# You should see a line like:
 #   emulator-5554   device
-# ou
+# or
 #   XXXXXXXX        device
 ```
 
-Si la liste est **vide** ou dit `unauthorized` :
-- émulateur : démarre-le d'abord depuis Android Studio (Device Manager) ;
-- téléphone : active **Options développeur → Débogage USB**, branche le câble, accepte la popup sur le téléphone.
+If the list is **empty** or says `unauthorized`:
+- emulator: start it first from Android Studio (Device Manager);
+- phone: enable **Developer options → USB debugging**, plug the cable in, accept the prompt on the phone.
 
 ```bash
-# 2) Compiler + installer le module app sur l'appareil
+# 2) Build + install the app module on the device
 ./gradlew :app:installDebug
 
-# 3) Ouvrir l'app (optionnel si installDebug ne l'a pas déjà lancée)
+# 3) Open the app (optional if installDebug already launched it)
 adb shell am start -n com.blindfoldchess.trainer/.MainActivity
 ```
 
-> **Note :** `./gradlew installDebug` et `./gradlew :app:installDebug` font la même chose ici, car seul le module `app` est une application installable.
+> **Note:** `./gradlew installDebug` and `./gradlew :app:installDebug` do the same thing here, because only `app` is an installable application.
 
-**Sans appareil connecté**, tu peux quand même **compiler** l'APK (mais pas l'installer) :
+**With no device connected**, you can still **build** the APK (but not install it):
 
 ```bash
 ./gradlew :app:assembleDebug
-# APK généré : app/build/outputs/apk/debug/app-debug.apk
+# APK: app/build/outputs/apk/debug/app-debug.apk
 ```
 
 ---
 
-#### Méthode 3 — Pas d'Android Studio / pas d'émulateur : aperçu navigateur
+#### Method 3 — no Android Studio / no emulator: browser preview
 
-Si tu veux juste **voir l'interface** sans configurer un émulateur :
+If you only want to **see the UI** without setting up an emulator:
 
 ```bash
 python3 -m http.server 8080 --directory preview
 ```
 
-→ [http://localhost:8080](http://localhost:8080) (démo web, pas l'app Android réelle).
+→ [http://localhost:8080](http://localhost:8080) (web demo, not the real Android app).
 
 ---
 
-#### WSL2 : pourquoi `adb devices` est souvent vide
+#### WSL2: why `adb devices` is often empty
 
-Sous WSL2, l'émulateur tourne souvent **côté Windows**, alors que `adb` dans WSL ne le voit pas.
+Under WSL2 the emulator usually runs **on Windows**, while `adb` in WSL does not see it.
 
-**Solutions :**
-- **La plus simple :** tout faire via **Android Studio Windows** (méthode 1 ci-dessus).
-- **Ou** utiliser `adb` Windows depuis PowerShell pour installer l'APK compilé dans WSL :
+**Workarounds:**
+- **Simplest:** do everything in **Android Studio on Windows** (method 1 above).
+- **Or** use Windows `adb` from PowerShell to install the APK built in WSL:
   ```powershell
   adb devices
   adb install \\wsl$\Ubuntu\home\thomas\Projects\blindfold-chess-trainer\app\build\outputs\apk\debug\app-debug.apk
   ```
 
-### 5. Via Docker (build + tests uniquement)
+### 5. Via Docker (build + tests only)
 
 ```bash
-# Première fois : construire l'image (peut prendre plusieurs minutes)
+# First time: build the image (can take several minutes)
 docker compose build
 
-# Lancer les tests et compiler l'APK dans le conteneur
+# Run tests and compile the APK in the container
 docker compose run --rm android
 ```
 
-L'APK sera généré dans `app/build/outputs/apk/debug/` sur ton disque (volume monté).
+The APK is written to `app/build/outputs/apk/debug/` on your disk (mounted volume).
 
-> **Note :** l'émulateur Android dans Docker sous WSL2 est possible mais pénible à configurer. Pour tester l'UI, préfère Android Studio + émulateur ou un téléphone physique.
-
----
-
-## Ce que tu dois voir dans l'app
-
-1. **Écran d'accueil** — titre « Blindfold Chess Trainer », **6 cartes** identiques (titre + description + Start drill). Le plateau est **masqué** (bouton *Show board*).
-2. **Échiquier** — compact ; colonne droite : Hide, Flip, Coordinates, Arrows, Pieces. Retour accueil → plateau masqué à nouveau.
-3. **Find the Square** — coordonnée en grand, tap, flash vert/rouge. Le plateau s'ouvre au lancement du drill.
-4. **Square Colors** — case en grand, Light / Dark, *Next*, score `X / Y`.
-5. **Piece Path** — sélecteur de pièce, `e2 → f4`, pavé (files en minuscules) + **Speak** (FR/EN). Illégal : *Illegal move — starting over*. Reco floue : *Couldn't understand that move*.
-6. **Famous Games** — 6 cartes (comme l'accueil) ; Play this game ouvre le plateau ; un coup à la fois sur le plateau.
-7. **Free Board** — pavé (files minuscules, cadres à 50 % d'opacité), tap, **Speak**. Trait et saisie sur une ligne (`White to move - NF3`). Illégal : refusé, on reste où on était.
-8. **Play the Bot** — setup Elo/couleur ; si partie en cours : Continue / Discard. Dernier coup du bot en grand ; *White to move · Bot is thinking…* ; mat/pat + Play again sur la même ligne. Voix comme Free Board.
-9. **Back / cube accueil** — retour accueil (plateau masqué).
-
-Pour valider Square Colors : `a1` **foncée**, `a2` **claire**, `e4` **claire**.  
-Pour valider Piece Path (tour) : même file ou même rang = légal ; sinon reset.  
-Pour valider la voix : Speak + **EN** puis `knight f 3` ; **FR** puis `cavalier f trois` / `pion prend F4` / `petit rock`.  
-Pour valider Play the Bot : le premier coup du bot arrive en quelques secondes ; sinon voir `NativeStockfish`/NDK.
+> **Note:** an Android emulator inside Docker on WSL2 is possible but painful. To test the UI, prefer Android Studio + emulator or a physical phone.
 
 ---
 
-## Commandes utiles
+## What you should see in the app
+
+1. **Home** — title “Blindfold Chess Trainer”, **7 identical cards** (title + description + Start drill). The board is **hidden** (*Show board*).
+2. **Board** — compact; right column: Hide, Flip, Coordinates, Arrows, Pieces. Returning Home hides the board again.
+3. **Find the Square** — large coordinate, tap, green/red flash. The board opens when the drill starts.
+4. **Name the Square** — a square stays green; pad (file then rank) or **Speak**. Wrong name: *Not quite — try again*. Unclear speech: *Couldn't understand that square*. The board opens when the drill starts.
+5. **Square Colors** — large square, Light / Dark, *Next*, score `X / Y`.
+6. **Piece Path** — piece selector, `e2 → f4`, pad (lowercase files) + **Speak** (FR/EN). Illegal: *Illegal move — starting over*. Unclear speech: *Couldn't understand that move*.
+7. **Famous Games** — 6 cards (same style as Home); Play this game opens the board; one announced move at a time.
+8. **Free Board** — pad (lowercase files, frames at 50% opacity), tap, **Speak**. Side to move and draft on one line (`White to move - NF3`). Illegal: rejected, position unchanged.
+9. **Play the Bot** — Elo/color setup; if a game is in progress: Continue / Discard. Last bot move large; *White to move · Bot is thinking…*; checkmate/stalemate + Play again on the same row. Voice same as Free Board.
+10. **About & license** — quiet link at the bottom of Home: GPLv3, Stockfish, chesslib, buttons to the repo and the LICENSE file.
+11. **Back / home cube** — return Home (board hidden).
+
+To check Square Colors: `a1` is **dark**, `a2` is **light**, `e4` is **light**.  
+To check Piece Path (rook): same file or same rank = legal; otherwise reset.  
+To check voice: Speak + **EN** then `knight f 3`; **FR** then `cavalier f trois` / `pion prend F4` / `petit rock`. Name the Square: Speak `e4` / `e four` / `S5`.  
+To check Play the Bot: the bot’s first move should arrive within a few seconds; otherwise see `NativeStockfish`/NDK in troubleshooting.
+
+---
+
+## Useful commands
 
 ```bash
-# Tests uniquement
+# Tests only
 ./gradlew test
 
-# Recompiler l'APK debug
+# Rebuild the debug APK
 ./gradlew assembleDebug
 
-# Nettoyer et tout reconstruire
+# Play upload bundle (signed if keystore.properties exists) + 16 KB check
+./gradlew :app:bundleRelease :app:checkReleasePageSize
+# AAB: app/build/outputs/bundle/release/app-release.aab
+
+# Clean and rebuild everything
 ./gradlew clean test assembleDebug
 
-# Voir les tâches Gradle disponibles
+# List available Gradle tasks
 ./gradlew tasks
 ```
 
+**Play signing (once, local only):** `powershell -ExecutionPolicy Bypass -File .\scripts\create-upload-keystore.ps1`  
+That writes `keystore/upload-keystore.jks` and `keystore.properties` (both gitignored). Back them up offline. Losing the upload key blocks Play updates.
+
 ---
 
-## Dépannage courant
+## Common troubleshooting
 
-| Problème | Piste |
+| Problem | Hint |
 |---|---|
-| `:app:processDebugResources FAILED` | Voir section ci-dessous |
-| `SDK location not found` | Crée `local.properties` avec `sdk.dir=/chemin/vers/Android/Sdk` |
-| `java: invalid target release: 21` | Installe JDK 21 et vérifie `JAVA_HOME` |
-| `JAVA_HOME is not set` en lançant `./gradlew` depuis Git Bash (Windows) | Exporte-le pour la session : `JAVA_HOME="C:\Program Files\Android\Android Studio\jbr" ./gradlew test` |
-| `assembleDebug` / `installDebug` très long ou échoue sur du C++ | Le build compile aussi Stockfish (NDK/CMake). Installe NDK `28.2.13676358` + CMake `3.22.1` via le SDK Manager si absents ; `./gradlew test` seul n'a pas besoin du NDK |
-| `AccessDeniedException` dans `app/build` ou `core/chess/build` | Fichiers créés par Docker en `root` — voir section ci-dessous |
-| `adb: command not found` | Installe `platform-tools` ou utilise Android Studio |
-| `adb devices` vide sous WSL2 | Lance l'émulateur depuis Android Studio (Windows) ou branche un téléphone en USB |
-| `Gradle JVM option is incorrect` (projet sur `\\wsl$\`) | Voir section ci-dessous |
-| Build Docker très long la 1ʳᵉ fois | Normal — SDK et dépendances Gradle sont mis en cache dans les volumes Docker |
+| `:app:processDebugResources FAILED` | See section below |
+| `SDK location not found` | Create `local.properties` with `sdk.dir=/path/to/Android/Sdk` |
+| `java: invalid target release: 21` | Install JDK 21 and check `JAVA_HOME` |
+| `JAVA_HOME is not set` when running `./gradlew` from Git Bash (Windows) | Export it for the session: `JAVA_HOME="C:\Program Files\Android\Android Studio\jbr" ./gradlew test` |
+| `assembleDebug` / `installDebug` very slow or fails on C++ | The build also compiles Stockfish (NDK/CMake). Install NDK `28.2.13676358` + CMake `3.22.1` via SDK Manager if missing; `./gradlew test` alone does not need the NDK |
+| `AccessDeniedException` in `app/build` or `core/chess/build` | Files created by Docker as `root` — see section below |
+| `adb: command not found` | Install `platform-tools` or use Android Studio |
+| `adb devices` empty under WSL2 | Start the emulator from Android Studio (Windows) or plug in a phone over USB |
+| `Gradle JVM option is incorrect` (project on `\\wsl$\`) | See section below |
+| First Docker build very long | Normal — SDK and Gradle deps are cached in Docker volumes |
 
-### Erreur Gradle JVM avec projet WSL (`\\wsl$\Ubuntu\...`)
+### Gradle JVM error with a WSL project (`\\wsl$\Ubuntu\...`)
 
-Message typique :
+Typical message:
 
 > Gradle JVM option is incorrect: `C:\Program Files\Android\Android Studio\jbr`  
 > The project is located on WSL. Use the JDK installed on the same WSL distribution.
 
-**Pourquoi :** le projet est sur le disque Linux (WSL), mais Gradle est configuré pour utiliser le JDK **Windows** d'Android Studio. Il faut le JDK **Ubuntu**.
+**Why:** the project lives on the Linux disk (WSL), but Gradle is pointed at Android Studio’s **Windows** JDK. You need the **Ubuntu** JDK.
 
-#### Fix (2 minutes) — pointer Gradle vers le JDK WSL
+#### Fix (about 2 minutes) — point Gradle at the WSL JDK
 
-1. Dans Android Studio : **File → Settings** (ou **Ctrl+Alt+S**).
+1. In Android Studio: **File → Settings** (or **Ctrl+Alt+S**).
 2. **Build, Execution, Deployment → Build Tools → Gradle**.
-3. Champ **Gradle JDK** : ne choisis **pas** `jbr-21` avec un chemin `C:\Program Files\...`.
-4. Sélectionne plutôt une entrée du type :
-   - **`WSL: java-21-openjdk-amd64`** ou **`Ubuntu (WSL)`**
-   - ou **Add JDK from disk…** puis navigue vers :
+3. **Gradle JDK:** do **not** pick `jbr-21` with a `C:\Program Files\...` path.
+4. Pick an entry such as:
+   - **`WSL: java-21-openjdk-amd64`** or **`Ubuntu (WSL)`**
+   - or **Add JDK from disk…** and browse to:
      ```
      \\wsl.localhost\Ubuntu\usr\lib\jvm\java-21-openjdk-amd64
      ```
-     *(équivalent : `\\wsl$\Ubuntu\usr\lib\jvm\java-21-openjdk-amd64`)*
-5. Clique **Apply → OK**.
-6. **File → Sync Project with Gradle Files** (icône éléphant avec flèche).
+     *(equivalent: `\\wsl$\Ubuntu\usr\lib\jvm\java-21-openjdk-amd64`)*
+5. Click **Apply → OK**.
+6. **File → Sync Project with Gradle Files** (elephant + arrow icon).
 
-Si le JDK WSL n'apparaît pas, installe-le dans Ubuntu :
+If the WSL JDK does not appear, install it in Ubuntu:
 
 ```bash
 sudo apt update
@@ -328,95 +340,93 @@ sudo apt install -y openjdk-21-jdk
 /usr/lib/jvm/java-21-openjdk-amd64/bin/java -version
 ```
 
-Puis refais l'étape 4 dans Android Studio.
+Then repeat step 4 in Android Studio.
 
-#### Sync qui affiche juste « fail » sans détail
+#### Sync that only says “fail” with no detail
 
-Android Studio masque souvent la vraie erreur. Dans les logs Windows, c'est en général :
+Android Studio often hides the real error. In the Windows logs it is usually:
 
 > **Operation result has not been received**
 
-La cause réelle (dans les logs Gradle WSL) est presque toujours :
+The actual cause (in the WSL Gradle logs) is almost always:
 
-> **sdk.dir = C:\Users\...\Android\Sdk** → Gradle Linux ne trouve pas ce chemin  
-> ou **Build Tools 35.0.0 is corrupted** (SDK Windows `.exe` vu depuis Ubuntu)
+> **sdk.dir = C:\Users\...\Android\Sdk** → Linux Gradle cannot find that path  
+> or **Build Tools 35.0.0 is corrupted** (Windows SDK `.exe` seen from Ubuntu)
 
-**Pourquoi :** Android Studio **réécrit** `local.properties` avec le SDK Windows à chaque sync, alors que Gradle tourne dans **Ubuntu**.
+**Why:** Android Studio **rewrites** `local.properties` with the Windows SDK on every sync, while Gradle runs in **Ubuntu**.
 
-**Fix automatique (déjà dans le projet) :** `settings.gradle.kts` corrige `local.properties` au démarrage de Gradle. Si ça bloque encore :
+**Automatic fix (already in the project):** `settings.gradle.kts` corrects `local.properties` when Gradle starts. If it still blocks:
 
 ```bash
 ./scripts/fix-local-properties.sh
 ```
 
-Puis **File → Sync Project with Gradle Files** dans Android Studio.
+Then **File → Sync Project with Gradle Files** in Android Studio.
 
-**Voir l'erreur cachée** (si « fail » sans texte) :
-- Android Studio → **Help → Show Log in Explorer** → ouvre `idea.log`
-- Cherche `Gradle sync failed` ou `MODEL_FETCH_FAILED`
-- Ou dans Ubuntu : `grep -i "sync failed\|FAILURE\|corrupted" ~/.gradle/daemon/8.11.1/*.log | tail -5`
+**See the hidden error** (if “fail” with no text):
+- Android Studio → **Help → Show Log in Explorer** → open `idea.log`
+- Search for `Gradle sync failed` or `MODEL_FETCH_FAILED`
+- Or in Ubuntu: `grep -i "sync failed\|FAILURE\|corrupted" ~/.gradle/daemon/8.11.1/*.log | tail -5`
 
-**Règle WSL :**
-
-**Vérifier dans Ubuntu :**
+**Check in Ubuntu:**
 
 ```bash
 cd /home/thomas/Projects/blindfold-chess-trainer
 ./scripts/diagnose-sync.sh
 ```
 
-**Corriger `local.properties`** — il doit pointer vers un SDK **Linux dans WSL** :
+**Fix `local.properties`** — it must point at a **Linux SDK inside WSL**:
 
 ```properties
 sdk.dir=/home/thomas/Android/Sdk
 ```
 
-**Pas** vers `C:\Users\...` ni `/mnt/c/Users/...` (les build-tools Windows `.exe` sont « corrompus » vus depuis Gradle Linux).
+**Not** `C:\Users\...` and **not** `/mnt/c/Users/...` (Windows build-tools `.exe` files look “corrupted” to Linux Gradle).
 
-Si le SDK WSL n'existe pas encore, installe-le une fois :
+If the WSL SDK does not exist yet, install it once:
 
 ```bash
 export ANDROID_HOME="$HOME/Android/Sdk"
 mkdir -p "$ANDROID_HOME"
 yes | sdkmanager --sdk_root="$ANDROID_HOME" \
-  "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+  "platform-tools" "platforms;android-36" "build-tools;35.0.0"
 ```
 
-*(Remplace `sdkmanager` par son chemin si besoin, ex. `~/development/android/cmdline-tools/latest/bin/sdkmanager`.)*
+*(Replace `sdkmanager` with its full path if needed, e.g. `~/development/android/cmdline-tools/latest/bin/sdkmanager`.)*
 
-Puis dans Android Studio : **File → Sync Project with Gradle Files**.
+Then in Android Studio: **File → Sync Project with Gradle Files**.
 
-**Voir l'erreur réelle dans Android Studio** (quand le message est vague) :
-- Onglet **Build** en bas → sous-onglet **Sync** ou **Build Output**
-- Ou **View → Tool Windows → Build**
-- La ligne rouge au-dessus de « fail » contient la vraie cause (`SDK location`, `Build Tools corrupted`, etc.)
+**See the real error in Android Studio** (when the message is vague):
+- **Build** tab at the bottom → **Sync** or **Build Output**
+- Or **View → Tool Windows → Build**
+- The red line above “fail” is the real cause (`SDK location`, `Build Tools corrupted`, etc.)
 
-#### Alternative plus simple — éviter WSL pour Android Studio
+#### Simpler alternative — avoid WSL for Android Studio
 
-Si la config WSL te semble fragile, clone le projet sur le disque **Windows** :
+If the WSL setup feels fragile, clone the project onto the **Windows** disk:
 
 ```
-C:\Users\<toi>\Projects\blindfold-chess-trainer
+C:\Users\<you>\Projects\blindfold-chess-trainer
 ```
 
-Ouvre **ce** dossier dans Android Studio. Le JDK par défaut (`jbr` d'Android Studio) fonctionnera sans réglage spécial. Tu peux garder une copie dans WSL pour le terminal/Docker si tu veux.
+Open **that** folder in Android Studio. The default JDK (`jbr` from Android Studio) will work with no extra setup. You can keep a copy in WSL for the terminal/Docker if you want.
 
-### Erreur `:app:processDebugResources FAILED`
+### `:app:processDebugResources FAILED`
 
-Causes fréquentes :
+Common causes:
 
-1. **SDK manquant** — crée `local.properties` (voir `local.properties.example`).
-2. **Dossiers `build/` verrouillés** — arrive souvent après `docker compose run` (fichiers owned par `root`). Symptôme : `AccessDeniedException` ou `Could not set file mode 755`.
+1. **Missing SDK** — create `local.properties` (see `local.properties.example`).
+2. **Locked `build/` folders** — often after `docker compose run` (files owned by `root`). Symptom: `AccessDeniedException` or `Could not set file mode 755`.
 
    ```bash
-   # Corrige en une commande (demande ton mot de passe sudo)
+   # Fix in one command (asks for your sudo password)
    sudo ./scripts/fix-build-permissions.sh
 
-   # Puis relance
+   # Then retry
    ./gradlew test assembleDebug
    ```
 
-3. **Cache Gradle corrompu** — en dernier recours :
+3. **Corrupt Gradle cache** — last resort:
 
    ```bash
    ./gradlew --stop
@@ -424,9 +434,9 @@ Causes fréquentes :
    ./gradlew test assembleDebug --no-build-cache
    ```
 
-   Si `rm -rf app/build` échoue avec « Permission denied », utilise d'abord le script `fix-build-permissions.sh`.
+   If `rm -rf app/build` fails with “Permission denied”, run `fix-build-permissions.sh` first.
 
-Exemple de `local.properties` (ne pas committer ce fichier) :
+Example `local.properties` (do not commit this file):
 
 ```properties
 sdk.dir=/home/thomas/Android/Sdk
@@ -434,82 +444,79 @@ sdk.dir=/home/thomas/Android/Sdk
 
 ---
 
-## Structure du projet
+## Project structure
 
 ```
-app/              → UI Compose (accueil, drills, échiquier), pont moteur (engine/), Stockfish natif (cpp/)
-core/chess/       → logique échecs (chesslib) + tests unitaires
-preview/          → aperçu web statique (Square Colors seulement — très en retard sur l'app réelle)
-scripts/          → utilitaires (SDK Windows/WSL, droits build)
-.github/workflows → CI (installe NDK + CMake, tests + APK debug)
-docs/             → PROJECT_CONTEXT.md (contexte session)
-LICENSE           → GPLv3 (imposé par le vendoring de Stockfish)
-NOTICE            → provenance Stockfish (GPLv3) et chesslib (Apache 2.0)
+app/              → Compose UI (home, drills, board), engine bridge, native Stockfish (cpp/)
+core/chess/       → chess logic (chesslib) + unit tests
+preview/          → static web preview (Square Colors only — far behind the real app)
+scripts/          → helpers (Windows/WSL SDK, build permissions)
+.github/workflows → CI (installs NDK + CMake, tests + debug APK)
+docs/             → PROJECT_CONTEXT.md (session context)
+LICENSE           → GPLv3 (required by vendoring Stockfish)
+NOTICE            → Stockfish (GPLv3) and chesslib (Apache 2.0) provenance
 docker-compose.yml
 Dockerfile
 ```
 
-Fichiers UI / drills :
+UI / drill files:
 
 ```
 app/.../trainer/
-├── MainActivity.kt                 # visibilité plateau, AppScreen
+├── MainActivity.kt                 # board visibility, AppScreen
 ├── engine/                         # ChessEngine, NativeStockfish, StockfishChessEngine
 ├── feature/board/                  # AppShell, BoardPanel, ChessBoard
-├── feature/home/HomeScreen.kt      # 6 ActionCard
+├── feature/home/HomeScreen.kt / AboutScreen.kt
 ├── feature/drills/
 │   ├── CoordinatePad.kt / DrillBackButton.kt
 │   ├── VoiceMoveInput.kt           # SpeechRecognizer, FR/EN, Speak
-│   ├── FindSquare / SquareColor / PiecePath
+│   ├── FindSquare / NameSquare / SquareColor / PiecePath
 │   ├── FamousGamesScreen.kt / FamousGamesViewModel.kt
 │   ├── FreeBoardScreen.kt / FreeBoardViewModel.kt / FreeBoardPlayPad.kt
 │   └── PlayBotScreen.kt / PlayBotViewModel.kt
 └── ui/ActionCard.kt + ui/theme/
 
-app/src/main/cpp/                   # Stockfish sf_15 vendoré + pont JNI
+app/src/main/cpp/                   # vendored Stockfish sf_15 + JNI bridge
 ├── CMakeLists.txt
-├── bridge.cpp                       # glue JNI : pipes stdin/stdout de UCI::loop
-└── stockfish/                       # source upstream, non modifiée
+├── bridge.cpp                       # JNI glue: pipes stdin/stdout of UCI::loop
+└── stockfish/                       # upstream source, unmodified
 
 core/chess/.../
 ├── Square.kt / SquareColor.kt / SquareColorDrill.kt
-├── PieceType.kt                    # helpers de coups encore utilisés par les drills
+├── PieceType.kt                    # move helpers still used by drills
 ├── PiecePathDrill.kt / FindSquareDrill.kt
-├── OccupiedSquare.kt                # snapshot d'occupation du plateau
-├── ChessSession.kt                  # session chesslib : SAN/UCI/coups par cases, historique, undo
-├── ChesslibMapping.kt               # mapping interne Square/Move/PieceType <-> chesslib
+├── OccupiedSquare.kt                # board occupancy snapshot
+├── ChessSession.kt                  # chesslib session: SAN/UCI/square play, history, undo
+├── ChesslibMapping.kt               # internal Square/Move/PieceType <-> chesslib
 ├── FamousGame.kt / FamousGamesCatalog.kt
 ├── GameFollowDrill.kt
-└── ChessSpeechParser.kt             # voix FR/EN → SAN / case Piece Path
+└── ChessSpeechParser.kt             # FR/EN speech → SAN / Piece Path square
 ```
 
 ---
 
-## Prochaines étapes — recommandations
+## Next steps — recommendations
 
-Une feature à la fois. Pas de streaks, pas de dark patterns. `chesslib` est maintenant utilisé partout dans `core:chess`, et Stockfish tourne nativement (voir `docs/PROJECT_CONTEXT.md` pour le détail).
+One feature at a time. No streaks, no dark patterns. `chesslib` is used throughout `core:chess`, and Stockfish runs natively (see `docs/PROJECT_CONTEXT.md` for detail).
 
-**Priorité (ordre conseillé)**
+**Priority (suggested order)**
 
-1. **Committer** les changements vocaux / UI / Play the Bot / légalité SAN (arbre de travail actuel).
-2. **Mention de licence/lien vers les sources dans l'app** (écran « À propos ») avant Play Store.
-3. **Vrai mode aveugle** — masquer le plateau *pendant* un drill tout en suivant la position (le Hide actuel n'est pas un défi gradué).
-4. **Room** — historique calme des sessions (pas de streak).
-5. **Drill « Square names »**, distinct de Find the Square — réutilise `CoordinatePad`.
-6. **Plafonner la difficulté** Piece Path / Find the Square (ex. cavalier 1–3 coups).
-7. **ktlint / detekt**.
-8. **Mettre à jour ou abandonner `preview/`**.
+1. **True blindfold mode** — hide the board *during* a drill while still tracking the position (the current Hide is not a graded challenge).
+2. **Room** — calm session history (no streak).
+3. **Cap difficulty** on Piece Path / Find the Square (e.g. knight 1–3 moves).
+4. **ktlint / detekt**.
+5. **Update or drop `preview/`**.
 
-**Plus tard (pas maintenant)**
+**Later (not now)**
 
-- Navigation Compose (l'enum `AppScreen` suffit)
-- Upgrade AGP
+- Compose Navigation (the `AppScreen` enum is enough)
+- AGP upgrade
 - iOS / KMP
 
-**Règles session suivante**
+**Rules for the next session**
 
-- Travailler dans `D:\CodingProject\blindfold-chess-trainer`.
-- Lire `docs/PROJECT_CONTEXT.md` en plus de ce README.
-- Lancer `./gradlew :core:chess:test :app:testDebugUnitTest` après un changement de logique (sous Git Bash, exporter `JAVA_HOME` d'abord — voir Dépannage).
-- Un drill ou un toggle board à la fois.
-- Committer régulièrement plutôt que d'empiler plusieurs features non commitées.
+- Work in `D:\CodingProject\blindfold-chess-trainer`.
+- Read `docs/PROJECT_CONTEXT.md` as well as this README.
+- Run `./gradlew :core:chess:test :app:testDebugUnitTest` after logic changes (from Git Bash, export `JAVA_HOME` first — see Troubleshooting).
+- One drill or board toggle at a time.
+- Commit regularly rather than stacking several uncommitted features.

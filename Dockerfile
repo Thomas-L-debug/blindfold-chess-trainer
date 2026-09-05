@@ -26,7 +26,7 @@ RUN mkdir -p ${ANDROID_HOME}/cmdline-tools && \
 RUN yes | sdkmanager --licenses && \
     sdkmanager \
     "platform-tools" \
-    "platforms;android-35" \
+    "platforms;android-36" \
     "build-tools;35.0.0" \
     "emulator" \
     "system-images;android-35;google_apis;x86_64"

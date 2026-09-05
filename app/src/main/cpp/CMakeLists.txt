@@ -44,3 +44,6 @@ target_link_libraries(stockfishjni
         log
         atomic
 )
+
+# Google Play requires 16 KB ELF alignment on 64-bit devices (Nov 2025+).
+target_link_options(stockfishjni PRIVATE "-Wl,-z,max-page-size=16384")

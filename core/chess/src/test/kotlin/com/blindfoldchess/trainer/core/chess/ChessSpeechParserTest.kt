@@ -105,6 +105,19 @@ class ChessSpeechParserTest {
     }
 
     @Test
+    fun `french j ai is accepted as the g file`() {
+        assertEquals("g1", ChessSpeechParser.parsePathMove("j'ai un").square?.algebraic)
+        assertEquals("g1", ChessSpeechParser.parsePathMove("j’ai un").square?.algebraic)
+        assertEquals("g1", ChessSpeechParser.parsePathMove("j'ai une").square?.algebraic)
+        assertEquals("g1", ChessSpeechParser.parsePathMove("jai un").square?.algebraic)
+        assertEquals("g1", ChessSpeechParser.parsePathMove("j ai 1").square?.algebraic)
+        assertEquals("g2", ChessSpeechParser.parsePathMove("j'ai deux").square?.algebraic)
+        assertEquals("g8", ChessSpeechParser.parsePathMove("j'ai huit").square?.algebraic)
+        assertContains("j'ai un", "g1")
+        assertContains("j'ai deux", "g2")
+    }
+
+    @Test
     fun `empty and noise produce nothing useful or stay empty`() {
         assertTrue(ChessSpeechParser.candidates("").isEmpty())
         assertTrue(ChessSpeechParser.candidates("   ").isEmpty())
