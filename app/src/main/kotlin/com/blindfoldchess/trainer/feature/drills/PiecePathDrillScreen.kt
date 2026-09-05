@@ -18,9 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -49,6 +46,13 @@ fun PiecePathDrillScreen(
     viewModel: PiecePathDrillViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val padEnabled = uiState.start != null && !uiState.solved
+    val (speechLanguage, setSpeechLanguage) = rememberVoiceSpeechLanguage()
+    val voice = rememberVoiceInput(
+        enabled = padEnabled,
+        languageTag = speechLanguage.tag,
+        onUtterances = viewModel::playSpoken,
+    )
 
     LaunchedEffect(
         uiState.flashToken,
@@ -119,24 +123,31 @@ fun PiecePathDrillScreen(
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            text = stringResource(
-                R.string.piece_path_current,
-                uiState.current?.algebraic.orEmpty(),
-            ),
+            text = buildString {
+                append(
+                    stringResource(
+                        R.string.piece_path_current,
+                        uiState.current?.algebraic.orEmpty(),
+                    ),
+                )
+                when {
+                    voice.listening -> {
+                        append(" · ")
+                        append(stringResource(R.string.voice_listening))
+                    }
+                    !uiState.lastSpoken.isNullOrBlank() -> {
+                        append(" - ")
+                        append(uiState.lastSpoken)
+                    }
+                }
+            },
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        var showIllegal by remember { mutableStateOf(false) }
-        LaunchedEffect(uiState.flashToken, uiState.illegal) {
-            if (uiState.illegal) {
-                showIllegal = true
-                delay(ILLEGAL_HIGHLIGHT_MS)
-                showIllegal = false
+            color = if (uiState.illegal || uiState.unrecognized) {
+                Incorrect
             } else {
-                showIllegal = false
-            }
-        }
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+        )
 
         val pathStart = uiState.start
         val trail = if (uiState.path.isNotEmpty() && pathStart != null) {
@@ -162,7 +173,9 @@ fun PiecePathDrillScreen(
 
         val feedback = when {
             uiState.solved -> stringResource(R.string.feedback_correct)
-            showIllegal -> stringResource(R.string.feedback_illegal_move)
+            uiState.illegal -> stringResource(R.string.feedback_illegal_move)
+            uiState.unrecognized -> stringResource(R.string.voice_move_unclear)
+            voice.error != null -> voice.error
             else -> " "
         }
         Text(
@@ -170,7 +183,8 @@ fun PiecePathDrillScreen(
             style = MaterialTheme.typography.titleMedium,
             color = when {
                 uiState.solved -> Correct
-                showIllegal -> Incorrect
+                uiState.illegal || uiState.unrecognized -> Incorrect
+                voice.error != null -> MaterialTheme.colorScheme.onSurfaceVariant
                 else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0f)
             },
             textAlign = TextAlign.Center,
@@ -187,9 +201,16 @@ fun PiecePathDrillScreen(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+        VoiceSpeakRow(
+            enabled = padEnabled,
+            voice = voice,
+            language = speechLanguage,
+            onLanguage = setSpeechLanguage,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
         CoordinatePad(
             pendingFile = uiState.pendingFile,
-            enabled = uiState.start != null && !uiState.solved,
+            enabled = padEnabled,
             onFile = viewModel::onFile,
             onRank = viewModel::onRank,
         )

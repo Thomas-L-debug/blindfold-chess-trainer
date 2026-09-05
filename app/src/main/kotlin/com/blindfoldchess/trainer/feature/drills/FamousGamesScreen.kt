@@ -14,8 +14,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -46,6 +44,7 @@ import com.blindfoldchess.trainer.core.chess.OccupiedSquare
 import com.blindfoldchess.trainer.core.chess.Square
 import com.blindfoldchess.trainer.feature.board.BoardArrow
 import com.blindfoldchess.trainer.feature.board.SquareHighlight
+import com.blindfoldchess.trainer.ui.ActionCard
 import com.blindfoldchess.trainer.ui.theme.Correct
 import com.blindfoldchess.trainer.ui.theme.Incorrect
 import kotlinx.coroutines.delay
@@ -61,6 +60,7 @@ fun FamousGamesScreen(
     onPiecesChange: (List<OccupiedSquare>) -> Unit = {},
     onSelectedSquareChange: (Square?) -> Unit = {},
     onSquareClickChange: (((Square) -> Unit)?) -> Unit = {},
+    onShowBoard: () -> Unit = {},
     viewModel: FamousGamesViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -133,7 +133,10 @@ fun FamousGamesScreen(
     if (uiState.browsing) {
         FamousGamesLibrary(
             games = uiState.games,
-            onSelect = viewModel::selectGame,
+            onSelect = { id ->
+                onShowBoard()
+                viewModel.selectGame(id)
+            },
             onBack = onBack,
         )
     } else {
@@ -169,61 +172,27 @@ private fun FamousGamesLibrary(
             onHome = onBack,
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         games.forEach { game ->
-            FamousGameCard(game = game, onPlay = { onSelect(game.id) })
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-        DrillBackButton(onClick = onBack)
-        Spacer(modifier = Modifier.height(16.dp))
-    }
-}
-
-@Composable
-private fun FamousGameCard(
-    game: FamousGame,
-    onPlay: () -> Unit,
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            Text(
-                text = game.title,
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                text = stringResource(R.string.famous_games_vs, game.white, game.black),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = stringResource(
+            ActionCard(
+                title = game.title,
+                description = stringResource(R.string.famous_games_vs, game.white, game.black),
+                supportingText = stringResource(
                     R.string.famous_games_meta,
                     game.event,
                     game.year,
                     game.fullMoveCount,
                 ),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                actionLabel = stringResource(R.string.famous_games_play),
+                onAction = { onSelect(game.id) },
             )
-            Spacer(modifier = Modifier.height(6.dp))
-            Button(
-                onClick = onPlay,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.famous_games_play))
-            }
+            Spacer(modifier = Modifier.height(8.dp))
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        DrillBackButton(onClick = onBack)
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 

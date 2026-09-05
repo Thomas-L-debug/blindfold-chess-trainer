@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.blindfoldchess.trainer.core.chess.ChessMan
 import com.blindfoldchess.trainer.core.chess.ChessSession
 import com.blindfoldchess.trainer.core.chess.ChessSnapshot
+import com.blindfoldchess.trainer.core.chess.ChessSpeechParser
 import com.blindfoldchess.trainer.core.chess.OccupiedSquare
 import com.blindfoldchess.trainer.core.chess.PlayResult
 import com.blindfoldchess.trainer.core.chess.ReplayMove
@@ -56,6 +57,7 @@ data class FreeBoardUiState(
     val botElo: Int? = null,
     val botThinking: Boolean = false,
     val botFailed: Boolean = false,
+    val lastSpoken: String? = null,
 ) {
     val playedMoves: String
         get() = formatPlayedMoves(moves, moves.size)
@@ -147,6 +149,52 @@ open class FreeBoardViewModel(
                 disambiguation = null,
                 lastAttemptCorrect = null,
             )
+        }
+    }
+
+    fun playSpoken(utterances: List<String>) {
+        val state = _uiState.value
+        if (!state.inputEnabled) return
+        val heard = utterances.map { it.trim() }.filter { it.isNotEmpty() }
+        if (heard.isEmpty()) {
+            applyResult(PlayResult.Illegal, attemptedFrom = null, attemptedTo = null)
+            return
+        }
+        _uiState.update { it.copy(lastSpoken = heard.first(), lastAttemptCorrect = null) }
+        val tried = linkedSetOf<String>()
+        for (utterance in heard) {
+            for (candidate in ChessSpeechParser.candidates(utterance)) {
+                if (!tried.add(candidate)) continue
+                when (val result = playCandidate(candidate)) {
+                    is PlayResult.Played -> {
+                        applyResult(result, attemptedFrom = result.move.from, attemptedTo = result.move.to)
+                        return
+                    }
+                    is PlayResult.Ambiguous -> {
+                        applyResult(result, attemptedFrom = null, attemptedTo = result.to)
+                        return
+                    }
+                    is PlayResult.NeedsPromotion -> {
+                        val promoted = session.playSquares(result.from, result.to, ChessMan.QUEEN)
+                        if (promoted is PlayResult.Played) {
+                            applyResult(promoted, attemptedFrom = result.from, attemptedTo = result.to)
+                            return
+                        }
+                    }
+                    PlayResult.Illegal -> Unit
+                }
+            }
+        }
+        applyResult(PlayResult.Illegal, attemptedFrom = null, attemptedTo = null)
+    }
+
+    private fun playCandidate(candidate: String): PlayResult {
+        val token = candidate.trim()
+        if (token.isEmpty()) return PlayResult.Illegal
+        return if (ChessSpeechParser.isUci(token)) {
+            session.playUci(token)
+        } else {
+            session.playSan(token)
         }
     }
 
@@ -445,6 +493,7 @@ open class FreeBoardViewModel(
                 botElo = it.botElo,
                 botThinking = false,
                 botFailed = false,
+                lastSpoken = null,
             )
         }
     }

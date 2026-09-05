@@ -1,6 +1,7 @@
 package com.blindfoldchess.trainer.feature.drills
 
 import androidx.lifecycle.ViewModel
+import com.blindfoldchess.trainer.core.chess.ChessSpeechParser
 import com.blindfoldchess.trainer.core.chess.PiecePathDrill
 import com.blindfoldchess.trainer.core.chess.PieceType
 import com.blindfoldchess.trainer.core.chess.Square
@@ -18,12 +19,14 @@ data class PiecePathUiState(
     val path: List<Square> = emptyList(),
     val solved: Boolean = false,
     val illegal: Boolean = false,
+    val unrecognized: Boolean = false,
     val lastMoveSquare: Square? = null,
     val lastMoveFrom: Square? = null,
     val lastMoveLegal: Boolean? = null,
     val flashToken: Int = 0,
     val correctCount: Int = 0,
     val totalCount: Int = 0,
+    val lastSpoken: String? = null,
 )
 
 class PiecePathDrillViewModel(
@@ -48,7 +51,7 @@ class PiecePathDrillViewModel(
         val state = _uiState.value
         if (state.solved) return
         _uiState.update {
-            it.copy(pendingFile = file, illegal = false)
+            it.copy(pendingFile = file, illegal = false, unrecognized = false, lastSpoken = null)
         }
     }
 
@@ -56,14 +59,41 @@ class PiecePathDrillViewModel(
         val state = _uiState.value
         if (state.solved) return
         val file = state.pendingFile ?: return
-        val from = state.current ?: return
-        val to = Square(file, rank)
+        tryMove(Square(file, rank))
+    }
 
+    fun playSpoken(utterances: List<String>) {
+        val state = _uiState.value
+        if (state.solved || state.start == null) return
+        val heard = utterances.map { it.trim() }.filter { it.isNotEmpty() }
+        if (heard.isEmpty()) return
+        for (utterance in heard) {
+            val parsed = ChessSpeechParser.parsePathMove(utterance)
+            val square = parsed.square ?: continue
+            _uiState.update { it.copy(lastSpoken = utterance, unrecognized = false) }
+            if (parsed.piece != null && parsed.piece != state.piece) {
+                restartFromZero(attempted = square)
+                return
+            }
+            tryMove(square)
+            return
+        }
+        _uiState.update {
+            it.copy(
+                lastSpoken = heard.first(),
+                unrecognized = true,
+                illegal = false,
+            )
+        }
+    }
+
+    private fun tryMove(to: Square) {
+        val state = _uiState.value
+        val from = state.current ?: return
         if (!drill.isLegalMove(state.piece, from, to)) {
             restartFromZero(attempted = to)
             return
         }
-
         val reachedTarget = to == state.target
         _uiState.update {
             it.copy(
@@ -72,12 +102,14 @@ class PiecePathDrillViewModel(
                 path = it.path + to,
                 solved = reachedTarget,
                 illegal = false,
+                unrecognized = false,
                 lastMoveSquare = to,
                 lastMoveFrom = from,
                 lastMoveLegal = true,
                 flashToken = it.flashToken + 1,
                 correctCount = it.correctCount + if (reachedTarget) 1 else 0,
                 totalCount = it.totalCount + if (reachedTarget) 1 else 0,
+                lastSpoken = null,
             )
         }
     }
@@ -95,10 +127,12 @@ class PiecePathDrillViewModel(
                 path = emptyList(),
                 solved = false,
                 illegal = false,
+                unrecognized = false,
                 lastMoveSquare = null,
                 lastMoveFrom = null,
                 lastMoveLegal = null,
                 flashToken = it.flashToken + 1,
+                lastSpoken = null,
             )
         }
     }
@@ -113,6 +147,7 @@ class PiecePathDrillViewModel(
                 path = emptyList(),
                 solved = false,
                 illegal = true,
+                unrecognized = false,
                 lastMoveSquare = attempted,
                 lastMoveFrom = from,
                 lastMoveLegal = false,

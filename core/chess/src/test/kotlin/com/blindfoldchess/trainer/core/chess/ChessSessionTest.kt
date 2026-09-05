@@ -53,6 +53,24 @@ class ChessSessionTest {
     }
 
     @Test
+    fun `plays pawn capture SAN exf4`() {
+        val session = ChessSession("4k3/8/8/4p3/5P2/8/8/4K3 b - - 0 1")
+        val result = session.playSan("exf4")
+        assertTrue("expected Played, got $result", result is PlayResult.Played)
+        val played = result as PlayResult.Played
+        assertEquals("e5", played.move.from.algebraic)
+        assertEquals("f4", played.move.to.algebraic)
+    }
+
+    @Test
+    fun `rejects pawn SAN that is not a legal move`() {
+        val session = ChessSession()
+        assertEquals(PlayResult.Illegal, session.playSan("e5"))
+        assertTrue(session.snapshot().moves.isEmpty())
+        assertEquals(32, session.snapshot().pieces.size)
+    }
+
+    @Test
     fun `stepping back and forward keeps the line`() {
         val session = ChessSession()
         session.playSan("e4")

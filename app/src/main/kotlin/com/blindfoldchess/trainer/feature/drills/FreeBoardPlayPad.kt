@@ -33,9 +33,13 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.blindfoldchess.trainer.R
@@ -52,10 +56,18 @@ internal fun FreeBoardPlayBody(
     description: String,
     uiState: FreeBoardUiState,
     extraHint: String? = null,
+    botLastMove: String? = null,
     viewModel: FreeBoardViewModel,
     onBack: () -> Unit,
+    onPlayAgain: (() -> Unit)? = null,
 ) {
     val padEnabled = uiState.inputEnabled && uiState.disambiguation == null
+    val (speechLanguage, setSpeechLanguage) = rememberVoiceSpeechLanguage()
+    val voice = rememberVoiceInput(
+        enabled = uiState.inputEnabled,
+        languageTag = speechLanguage.tag,
+        onUtterances = viewModel::playSpoken,
+    )
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -71,36 +83,12 @@ internal fun FreeBoardPlayBody(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Text(
-            text = statusText(uiState),
-            style = MaterialTheme.typography.titleMedium,
-            color = when {
-                uiState.isCheckmate || uiState.isStalemate -> Correct
-                uiState.inCheck -> Incorrect
-                else -> MaterialTheme.colorScheme.onSurfaceVariant
-            },
-        )
-
-        val contextHint = extraHint ?: when {
-            uiState.disambiguation?.askFile == true -> stringResource(R.string.free_board_choose_file)
-            uiState.disambiguation != null -> stringResource(R.string.free_board_choose_rank)
-            uiState.reviewing -> stringResource(R.string.free_board_review_hint)
-            else -> null
+        val status = statusText(uiState)
+        val statusColor = when {
+            uiState.isCheckmate || uiState.isStalemate -> Correct
+            uiState.inCheck -> Incorrect
+            else -> MaterialTheme.colorScheme.onSurfaceVariant
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = contextHint ?: " ",
-            style = MaterialTheme.typography.bodyMedium,
-            color = if (contextHint == null) {
-                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0f)
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            },
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
         val moveDraft = uiState.moveDraft.uppercase()
         var showIllegal by remember { mutableStateOf(false) }
         LaunchedEffect(uiState.flashToken, uiState.lastAttemptCorrect) {
@@ -113,30 +101,121 @@ internal fun FreeBoardPlayBody(
             }
         }
         val illegal = showIllegal
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        val draftColor = if (illegal) Incorrect else MaterialTheme.colorScheme.primary
+        val statusLine = buildAnnotatedString {
+            append(status)
+            if (uiState.botThinking) {
+                append(" · ")
+                append(stringResource(R.string.play_bot_thinking))
+            } else if (voice.listening) {
+                append(" · ")
+                append(stringResource(R.string.voice_listening))
+            }
+            val spoken = uiState.lastSpoken
+            when {
+                moveDraft.isNotEmpty() || (illegal && spoken.isNullOrBlank()) -> {
+                    append(" - ")
+                    withStyle(SpanStyle(color = draftColor)) {
+                        when {
+                            moveDraft.isNotEmpty() && illegal ->
+                                append("$moveDraft - ${stringResource(R.string.free_board_illegal)}")
+                            illegal -> append(stringResource(R.string.free_board_illegal))
+                            else -> append(moveDraft)
+                        }
+                    }
+                }
+                !spoken.isNullOrBlank() -> {
+                    append(" - ")
+                    withStyle(SpanStyle(color = draftColor)) {
+                        if (illegal) {
+                            append("$spoken - ${stringResource(R.string.free_board_illegal)}")
+                        } else {
+                            append(spoken)
+                        }
+                    }
+                }
+            }
+        }
+        if (onPlayAgain != null && uiState.gameOver) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text = statusLine,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = statusColor,
+                    modifier = Modifier.weight(1f),
+                )
+                Button(onClick = onPlayAgain) {
+                    Text(stringResource(R.string.play_bot_play_again))
+                }
+            }
+        } else {
             Text(
-                text = when {
-                    moveDraft.isNotEmpty() && illegal ->
-                        "$moveDraft - ${stringResource(R.string.free_board_illegal)}"
-                    illegal -> stringResource(R.string.free_board_illegal)
-                    moveDraft.isNotEmpty() -> moveDraft
-                    else -> " "
-                },
-                style = MaterialTheme.typography.titleLarge,
-                color = when {
-                    illegal -> Incorrect
-                    moveDraft.isEmpty() -> MaterialTheme.colorScheme.primary.copy(alpha = 0f)
-                    else -> MaterialTheme.colorScheme.primary
+                text = statusLine,
+                style = MaterialTheme.typography.titleMedium,
+                color = statusColor,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        val contextHint = extraHint ?: voice.error ?: when {
+            uiState.botFailed -> stringResource(R.string.play_bot_failed)
+            uiState.disambiguation?.askFile == true -> stringResource(R.string.free_board_choose_file)
+            uiState.disambiguation != null -> stringResource(R.string.free_board_choose_rank)
+            uiState.reviewing -> stringResource(R.string.free_board_review_hint)
+            else -> null
+        }
+        if (contextHint != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = contextHint,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        if (botLastMove != null) {
+            Text(
+                text = if (botLastMove.isEmpty()) " " else stringResource(R.string.play_bot_last_move),
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (botLastMove.isEmpty()) {
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0f)
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
                 },
                 textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Text(
+                text = botLastMove.ifEmpty { " " },
+                fontSize = 36.sp,
+                fontWeight = FontWeight.Light,
+                color = if (botLastMove.isEmpty()) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0f)
+                } else {
+                    MaterialTheme.colorScheme.primary
+                },
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        VoiceSpeakRow(
+            enabled = uiState.inputEnabled,
+            voice = voice,
+            language = speechLanguage,
+            onLanguage = setSpeechLanguage,
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         KeyFrame {
             PieceTypeSelector(
@@ -177,7 +256,7 @@ internal fun FreeBoardPlayBody(
                             disambiguation.options.map { it[0] }.toSet()
                         else -> setOfNotNull(uiState.originFile)
                     },
-                    uppercaseLabels = true,
+                    uppercaseLabels = false,
                 )
             }
             KeyFrame(modifier = Modifier.weight(1f)) {
@@ -263,7 +342,7 @@ internal fun KeyFrame(
             .fillMaxWidth()
             .border(
                 width = 1.dp,
-                color = MaterialTheme.colorScheme.outline,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                 shape = RoundedCornerShape(12.dp),
             )
             .padding(10.dp),
@@ -494,7 +573,7 @@ private fun statusText(uiState: FreeBoardUiState): String {
         if (uiState.isWhiteToMove) R.string.famous_games_white else R.string.famous_games_black,
     )
     return when {
-        uiState.isCheckmate -> stringResource(R.string.free_board_checkmate, side)
+        uiState.isCheckmate -> stringResource(R.string.free_board_checkmate)
         uiState.isStalemate -> stringResource(R.string.free_board_stalemate)
         uiState.inCheck -> stringResource(R.string.free_board_check, side)
         else -> stringResource(R.string.famous_games_side, side)

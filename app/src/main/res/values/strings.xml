@@ -62,7 +62,7 @@
     <string name="free_board_reset">Reset</string>
     <string name="free_board_illegal">Illegal move</string>
     <string name="free_board_check">%1$s in check</string>
-    <string name="free_board_checkmate">Checkmate — %1$s to move</string>
+    <string name="free_board_checkmate">Checkmate</string>
     <string name="free_board_stalemate">Stalemate</string>
     <string name="drill_play_bot_title">Play the Bot</string>
     <string name="drill_play_bot_description">Play a full game offline against Stockfish at a chosen rating</string>
@@ -70,6 +70,21 @@
     <string name="play_bot_choose_color">Your color</string>
     <string name="play_bot_start">Start game</string>
     <string name="play_bot_playing_as">Bot %1$d Elo · you play %2$s</string>
+    <string name="play_bot_game_in_progress">A game is already in progress</string>
+    <string name="play_bot_continue">Continue game</string>
+    <string name="play_bot_discard">Discard game</string>
+    <string name="play_bot_last_move">Bot played</string>
     <string name="play_bot_thinking">Bot is thinking…</string>
     <string name="play_bot_failed">The bot could not move</string>
+    <string name="play_bot_play_again">Play again</string>
+    <string name="voice_speak">Speak</string>
+    <string name="voice_lang_fr">FR</string>
+    <string name="voice_lang_en">EN</string>
+    <string name="voice_listening">Listening…</string>
+    <string name="voice_no_match">Couldn’t catch that — try again</string>
+    <string name="voice_move_unclear">Couldn’t understand that move — try again</string>
+    <string name="voice_unavailable">Speech recognition isn’t available on this device</string>
+    <string name="voice_need_mic">Microphone permission is needed to speak moves</string>
+    <string name="voice_network">No match — check the network, or install an offline speech pack</string>
+    <string name="voice_error">Speech recognition failed</string>
 </resources>

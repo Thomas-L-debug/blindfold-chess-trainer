@@ -8,44 +8,40 @@ Contexte complet : [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md)
 
 ---
 
-## Où en est le projet ? (1er septembre 2026)
+## Où en est le projet ? (5 septembre 2026)
 
 Workspace principal : `D:\CodingProject\blindfold-chess-trainer`  
-Branche : `main`. ⚠️ Tout ce qui suit (migration chesslib, pièces sur l'échiquier, 4 nouveaux écrans, moteur Stockfish natif, `LICENSE`/`NOTICE`) est présent dans l'arbre de travail mais **pas encore commité** au-delà de `effded9`.
+Branche : `main` (dernier commit `520f4ca`). Les changements récents (voix, cartes Famous Games, visibilité du plateau, Play the Bot resume, légalité SAN) sont dans l'arbre de travail, **pas encore commités**.
 
 | Élément | Statut | Notes |
 |---|---|---|
 | Projet Android (Kotlin + Jetpack Compose) | ✅ | AGP 8.9.1, Kotlin 2.1.10, minSdk 26, targetSdk 35, NDK 28.2.13676358 |
-| Module `core:chess` | ✅ | Entièrement sur `chesslib` désormais (règles, SAN, légalité) via `ChessSession` |
-| Écran d'accueil | ✅ | 6 cartes de drills, scrollable |
-| Drill **Find the Square** | ✅ | Une coordonnée est donnée → taper la case sur l'échiquier |
-| Drill **Square Colors** | ✅ | Case aléatoire → Light / Dark, flash vert/rouge 0,5 s sur l'échiquier |
-| Drill **Piece Path** | ✅ | Fou / cavalier / tour / dame, départ → arrivée, pavé a–h / 1–8 |
-| Drill **Famous Games** | ✅ | Parcourir une partie classique (6 au catalogue), rejouer chaque coup sur le plateau |
-| Drill **Free Board** | ✅ | Parties libres, pavé de notation, roque, prise, désambiguïsation, undo/reset |
-| Mode **Play the Bot** | ✅ | Partie complète contre Stockfish, 7 niveaux Elo (1350–2850), choix de couleur |
-| Pièces sur l'échiquier | ✅ | Glyphes Unicode, toggle dans le panneau échiquier |
-| Retournement du plateau (Flip) | ✅ | Toggle dans le panneau échiquier |
-| Moteur Stockfish natif | ✅ | Sources sf_15 vendorées, compilées via NDK/CMake en `libstockfishjni.so`, piloté en UCI par pipes JNI |
-| Échiquier global (`AppShell`) | ✅ | Compact (hauteur = carré du plateau), pas la moitié de l'écran |
-| Coordinates | ✅ | Rangs à gauche, files en bas ; l'échiquier ne saute pas |
-| Arrows | ✅ | Flèches orange coucher de soleil + cercles sur les cases du parcours |
-| Hide board | ✅ | Petit bouton **dans** le coin bas-droit de la zone échiquier |
-| Show board | ✅ | Bouton pleine largeur seulement quand le plateau est masqué |
-| `LICENSE` / `NOTICE` | ✅ | GPLv3 ajouté (imposé par le vendoring de Stockfish) |
-| Tests unitaires | ✅ | 91 tests, tous verts (`:core:chess:test` + `:app:testDebugUnitTest`) |
-| CI GitHub Actions | ✅ | `.github/workflows/ci.yml` : installe NDK + CMake, tests + APK debug, timeout 50 min |
+| Module `core:chess` | ✅ | `chesslib` via `ChessSession` ; `playSan` n'accepte que les coups de `legalMoves()` |
+| Écran d'accueil | ✅ | 6 cartes `ActionCard`, scrollable |
+| Drill **Find the Square** | ✅ | Coordonnée → tap sur la case ; ouvre le plateau au lancement |
+| Drill **Square Colors** | ✅ | Case aléatoire → Light / Dark, flash vert/rouge |
+| Drill **Piece Path** | ✅ | Fou / cavalier / tour / dame ; pavé **ou voix** ; coup illégal → reset + message ; reco floue → message sans reset |
+| Drill **Famous Games** | ✅ | Bibliothèque en cartes style accueil ; **Play this game** ouvre le plateau s'il est masqué |
+| Drill **Free Board** | ✅ | Coups légaux, pavé, tap, **voix** FR/EN ; coup illégal refusé, on reste sur la dernière position légale |
+| Mode **Play the Bot** | ✅ | Stockfish local, 7 Elo (1350–2500) ; Continue / Discard si une partie est en cours ; dernier coup du bot en grand ; **Play again** |
+| Saisie vocale | ✅ | `SpeechRecognizer` Android (gratuit) ; bouton Speak + FR/EN ; Free Board, Play the Bot, Piece Path |
+| Pièces / Flip / Arrows / Coordinates | ✅ | Glyphes Unicode, retournement, flèches, notation |
+| Visibilité du plateau | ✅ | Masqué au lancement et au retour accueil ; Find the Square et Famous Games (Play this game) l'ouvrent |
+| Moteur Stockfish natif | ✅ | sf_15 vendoré, JNI/UCI, `libstockfishjni.so` |
+| `LICENSE` / `NOTICE` | ✅ | GPLv3 (Stockfish) |
+| Tests unitaires | ✅ | **116** tests, tous verts (`:core:chess:testDebugUnitTest` + `:app:testDebugUnitTest`) |
+| CI GitHub Actions | ✅ | NDK + CMake, tests + APK debug |
 | Room (historique de sessions) | ❌ | pas encore |
-| Preview web (`preview/`) | ⚠️ | Démo Square Colors seulement — **très en retard** sur les 6 drills réels |
+| Preview web (`preview/`) | ⚠️ | Démo Square Colors seulement — **stale** |
 
 **Ce que tu peux tester aujourd'hui :**
 
-1. **Find the Square** — une coordonnée (`e4`, `d5`…) est affichée → tape la case correspondante sur le plateau.
-2. **Square Colors** — une case (`e4`, `d5`…) → *Light* / *Dark*. Bonne réponse : case en vert 0,5 s. Mauvaise : rouge 0,5 s. Score local, sans streak.
-3. **Piece Path** — choisir une pièce, aller du départ à l'arrivée par des coups légaux (lettre puis chiffre). Coup illégal → message immédiat et **reset au départ** (même exercice). Les flèches + cercles suivent le trajet si **Arrows** est coché.
-4. **Famous Games** — choisir une partie classique dans la bibliothèque, puis jouer chaque coup annoncé (pièce → destination) pour la faire avancer.
-5. **Free Board** — jouer une partie libre à coups légaux : pavé de notation ou tap direct sur le plateau, roque, prise, undo/reset, navigation dans l'historique.
-6. **Play the Bot** — choisir un Elo (1350 à 2500) et une couleur, puis jouer une partie complète contre Stockfish (calcul 100 % local, pas de réseau).
+1. **Find the Square** — coordonnée affichée → tape la case. Le plateau s'ouvre tout seul.
+2. **Square Colors** — case → *Light* / *Dark*. Vert 0,5 s / rouge 0,5 s. Score local, sans streak.
+3. **Piece Path** — pièce, départ → arrivée. Pavé ou **Speak** (`cavalier f 3`, ou juste `h6` / `S5`→f5). Illégal → reset + message. Reco floue (`P5`) → *Couldn't understand* sans reset.
+4. **Famous Games** — cartes de parties, **Play this game** (ouvre le plateau), rejouer chaque coup annoncé.
+5. **Free Board** — pavé, tap, ou voix (`e4`, `knight f3`, `pion prend F4`, `petit rock` / `castle`). Illégal → message, position inchangée.
+6. **Play the Bot** — Elo + couleur ; si une partie existe déjà : Continue / Discard. Dernier coup du bot en grand. Mat/pat + **Play again**. Voix comme Free Board.
 
 ---
 
@@ -250,19 +246,20 @@ L'APK sera généré dans `app/build/outputs/apk/debug/` sur ton disque (volume 
 
 ## Ce que tu dois voir dans l'app
 
-1. **Écran d'accueil** — titre « Blindfold Chess Trainer », **6 cartes** de drills, scrollable : Find the Square, Square Colors, Piece Path, Famous Games, Free Board, Play the Bot.
-2. **Échiquier en haut** — compact, options dans la colonne de droite (de haut en bas) : **Hide board**, **Flip**, *Coordinates*, *Arrows*, *Pieces*.
-3. **Find the Square** — une coordonnée en grand, tap direct sur le plateau, flash vert/rouge.
-4. **Square Colors** — case en grand, *Light* / *Dark*, flash de la case sur le plateau, *Next*, score `X / Y`.
-5. **Piece Path** — sélecteur Bishop / Knight / Rook / Queen, `e2 → f4`, pavé 2×4 lettres puis 2×4 chiffres. Trajet en flèches si Arrows est coché. Les pièces sont maintenant dessinées sur le plateau (toggle *Pieces*).
-6. **Famous Games** — bibliothèque de 6 parties classiques, puis un coup à la fois : taper la pièce à jouer et sa destination.
-7. **Free Board** — pavé de notation (file, rang, capture, roque) ou tap direct ; désambiguïsation si plusieurs pièces peuvent jouer le même coup ; undo, reset, navigation dans l'historique.
-8. **Play the Bot** — écran de configuration (Elo, couleur) puis partie complète, indicateur « Bot is thinking… » pendant que Stockfish calcule.
-9. **Back** — retour accueil, présent sur tous les écrans de drill.
+1. **Écran d'accueil** — titre « Blindfold Chess Trainer », **6 cartes** identiques (titre + description + Start drill). Le plateau est **masqué** (bouton *Show board*).
+2. **Échiquier** — compact ; colonne droite : Hide, Flip, Coordinates, Arrows, Pieces. Retour accueil → plateau masqué à nouveau.
+3. **Find the Square** — coordonnée en grand, tap, flash vert/rouge. Le plateau s'ouvre au lancement du drill.
+4. **Square Colors** — case en grand, Light / Dark, *Next*, score `X / Y`.
+5. **Piece Path** — sélecteur de pièce, `e2 → f4`, pavé (files en minuscules) + **Speak** (FR/EN). Illégal : *Illegal move — starting over*. Reco floue : *Couldn't understand that move*.
+6. **Famous Games** — 6 cartes (comme l'accueil) ; Play this game ouvre le plateau ; un coup à la fois sur le plateau.
+7. **Free Board** — pavé (files minuscules, cadres à 50 % d'opacité), tap, **Speak**. Trait et saisie sur une ligne (`White to move - NF3`). Illégal : refusé, on reste où on était.
+8. **Play the Bot** — setup Elo/couleur ; si partie en cours : Continue / Discard. Dernier coup du bot en grand ; *White to move · Bot is thinking…* ; mat/pat + Play again sur la même ligne. Voix comme Free Board.
+9. **Back / cube accueil** — retour accueil (plateau masqué).
 
 Pour valider Square Colors : `a1` **foncée**, `a2` **claire**, `e4` **claire**.  
 Pour valider Piece Path (tour) : même file ou même rang = légal ; sinon reset.  
-Pour valider Play the Bot : le premier coup du bot doit arriver en quelques secondes ; sinon voir `NativeStockfish`/NDK dans le dépannage.
+Pour valider la voix : Speak + **EN** puis `knight f 3` ; **FR** puis `cavalier f trois` / `pion prend F4` / `petit rock`.  
+Pour valider Play the Bot : le premier coup du bot arrive en quelques secondes ; sinon voir `NativeStockfish`/NDK.
 
 ---
 
@@ -456,26 +453,18 @@ Fichiers UI / drills :
 
 ```
 app/.../trainer/
-├── MainActivity.kt                 # AppScreen : Home | FindSquare | SquareColor | PiecePath | FamousGames | FreeBoard | PlayBot
-├── engine/
-│   ├── ChessEngine.kt               # interface + helpers UCI (parseBestMove, Elo→movetime)
-│   ├── NativeStockfish.kt           # externals JNI (startEngine / sendCommand / readLine)
-│   └── StockfishChessEngine.kt      # session UCI au-dessus du pont natif
-├── feature/board/
-│   ├── AppShell.kt                  # Board compact + contenu
-│   ├── BoardPanel.kt                # Échiquier + Hide / Flip / Coordinates / Arrows / Pieces
-│   └── ChessBoard.kt                # Canvas 8×8, pièces (glyphes), highlight, flèches, cercles, flip
-├── feature/home/HomeScreen.kt       # 6 cartes de drills
-└── feature/drills/
-    ├── CoordinatePad.kt             # pavé fichier/rang partagé
-    ├── DrillBackButton.kt           # bouton retour partagé
-    ├── FindSquareScreen.kt / FindSquareViewModel.kt
-    ├── SquareColorDrillScreen.kt / SquareColorDrillViewModel.kt
-    ├── PiecePathDrillScreen.kt / PiecePathDrillViewModel.kt
-    ├── FamousGamesScreen.kt / FamousGamesViewModel.kt
-    ├── FreeBoardScreen.kt / FreeBoardViewModel.kt / FreeBoardPlayPad.kt
-    └── PlayBotScreen.kt / PlayBotViewModel.kt   # étend FreeBoardViewModel
-└── ui/theme/
+├── MainActivity.kt                 # visibilité plateau, AppScreen
+├── engine/                         # ChessEngine, NativeStockfish, StockfishChessEngine
+├── feature/board/                  # AppShell, BoardPanel, ChessBoard
+├── feature/home/HomeScreen.kt      # 6 ActionCard
+├── feature/drills/
+│   ├── CoordinatePad.kt / DrillBackButton.kt
+│   ├── VoiceMoveInput.kt           # SpeechRecognizer, FR/EN, Speak
+│   ├── FindSquare / SquareColor / PiecePath
+│   ├── FamousGamesScreen.kt / FamousGamesViewModel.kt
+│   ├── FreeBoardScreen.kt / FreeBoardViewModel.kt / FreeBoardPlayPad.kt
+│   └── PlayBotScreen.kt / PlayBotViewModel.kt
+└── ui/ActionCard.kt + ui/theme/
 
 app/src/main/cpp/                   # Stockfish sf_15 vendoré + pont JNI
 ├── CMakeLists.txt
@@ -489,8 +478,9 @@ core/chess/.../
 ├── OccupiedSquare.kt                # snapshot d'occupation du plateau
 ├── ChessSession.kt                  # session chesslib : SAN/UCI/coups par cases, historique, undo
 ├── ChesslibMapping.kt               # mapping interne Square/Move/PieceType <-> chesslib
-├── FamousGame.kt / FamousGamesCatalog.kt   # 6 parties historiques
-└── GameFollowDrill.kt               # parse une FamousGame en positions/coups rejouables
+├── FamousGame.kt / FamousGamesCatalog.kt
+├── GameFollowDrill.kt
+└── ChessSpeechParser.kt             # voix FR/EN → SAN / case Piece Path
 ```
 
 ---
@@ -501,20 +491,19 @@ Une feature à la fois. Pas de streaks, pas de dark patterns. `chesslib` est mai
 
 **Priorité (ordre conseillé)**
 
-1. **Committer l'état actuel** en plusieurs commits logiques (migration chesslib / pièces + flip / nouveaux drills / Stockfish natif / LICENSE) avant d'ajouter du scope. Rien de tout ça n'est commité au-delà de `effded9`.
-2. **Ajouter une mention de licence/lien vers les sources dans l'app** (par ex. écran « À propos ») — le dépôt est déjà public, il ne manque que ce point côté app avant publication sur le Play Store (voir la note de licence en haut de ce fichier).
-3. **Vrai mode aveugle** — un moyen de masquer le plateau en cours de drill/partie tout en suivant la position mentalement ; distinct du toggle Hide actuel, qui arrête juste le rendu sans être un vrai défi gradué.
-4. **Room** — historique calme des sessions (scores, pas de streak), une fois l'ensemble de drills actuel stabilisé.
-5. **Drill « Square names »**, distinct de Find the Square (nommer une case montrée, plutôt que taper une case nommée) — réutilise `CoordinatePad`.
-6. **Difficulté Piece Path / Find the Square** — limiter la distance (ex. cavalier 1–3 coups) pour que les puzzles restent jouables à l'aveugle.
+1. **Committer** les changements vocaux / UI / Play the Bot / légalité SAN (arbre de travail actuel).
+2. **Mention de licence/lien vers les sources dans l'app** (écran « À propos ») avant Play Store.
+3. **Vrai mode aveugle** — masquer le plateau *pendant* un drill tout en suivant la position (le Hide actuel n'est pas un défi gradué).
+4. **Room** — historique calme des sessions (pas de streak).
+5. **Drill « Square names »**, distinct de Find the Square — réutilise `CoordinatePad`.
+6. **Plafonner la difficulté** Piece Path / Find the Square (ex. cavalier 1–3 coups).
 7. **ktlint / detekt**.
-8. **Mettre à jour `preview/index.html`** — ou l'abandonner : il ne montre qu'1 drill sur 6 désormais.
+8. **Mettre à jour ou abandonner `preview/`**.
 
 **Plus tard (pas maintenant)**
 
-- Navigation Compose (l'enum `AppScreen` suffit pour l'instant, 7 écrans)
+- Navigation Compose (l'enum `AppScreen` suffit)
 - Upgrade AGP
-- Saisie vocale
 - iOS / KMP
 
 **Règles session suivante**

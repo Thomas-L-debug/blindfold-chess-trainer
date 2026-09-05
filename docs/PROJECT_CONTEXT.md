@@ -1,6 +1,6 @@
 # Blindfold Chess Trainer — PROJECT CONTEXT
 
-**Last updated:** September 1, 2026
+**Last updated:** September 5, 2026
 
 ---
 
@@ -24,47 +24,43 @@ Goal: peaceful, pleasant training at the user's own pace.
 
 ---
 
-## ⚠️ Working-tree note (2026-09-01)
+## ⚠️ Working-tree note (2026-09-05)
 
-Everything below the last commit (`effded9`, *"Update README and project context for the current app state"*) is currently **uncommitted** — chesslib migration, pieces on the board, 4 new drills, the native Stockfish engine, and `LICENSE`/`NOTICE`. It's all in the working tree on `D:\CodingProject\blindfold-chess-trainer` and verified building/passing tests, but nothing has been committed yet. Commit in logical chunks before doing more work on top.
+Last commit on `main`: `520f4ca` (*update readme et project_context*). Uncommitted on top: voice input, `ActionCard` home/Famous Games cards, board show/hide rules, Play the Bot resume/Play again/last-move UI, `ChessSession.playSan` legal-move gate, speech parser (FR/EN, pawn takes, S→F). Commit before piling more work.
 
 ---
 
-## Current Status (September 1, 2026)
+## Current Status (September 5, 2026)
 
 ### Done
 
 | Area | Status | Notes |
 |---|---|---|
 | Android project (Kotlin + Compose) | ✅ | AGP 8.9.1, Kotlin 2.1.10, compileSdk 35, NDK 28.2.13676358 |
-| Module `core:chess` | ✅ | Now backed by `chesslib` end-to-end (rules, SAN, legality) via `ChessSession` |
+| Module `core:chess` | ✅ | `chesslib` via `ChessSession` ; SAN only applied if it matches `legalMoves()` |
 | Module `app` | ✅ | UI Compose, dark calm theme |
-| Home screen | ✅ | 6 drill cards, scrollable |
-| Drill « Find the Square » | ✅ | Coordinate shown → tap the matching square on the board |
-| Drill « Square Colors » | ✅ | Random square → Light / Dark ; board flash green/red 0.5 s |
-| Drill « Piece Path » | ✅ | Choose piece, start → target, file-then-rank pad ; illegal move resets |
-| Drill « Famous Games » | ✅ | Browse 6 historical games, play each move on the board, step navigation |
-| Drill « Free Board » | ✅ | Free legal play, notation pad (file/rank, capture, castle), disambiguation, undo/reset |
-| Mode « Play the Bot » | ✅ | Full game vs. Stockfish, 7 Elo levels (1350–2850), choose color |
-| Pieces rendered on the board | ✅ | Unicode glyphs, toggle in board panel |
-| Board flip (white/black side) | ✅ | Toggle in board panel |
-| Native Stockfish engine | ✅ | Vendored sf_15 source, compiled via NDK/CMake to `libstockfishjni.so`, UCI over JNI pipes |
-| Chess board UI | ✅ | Compact square (not half the screen), global via `AppShell` |
-| Coordinates | ✅ | Ranks left, files bottom only ; grid does not jump |
-| Arrows | ✅ | Sunset-orange path arrows + center circles on visited squares |
-| Hide / Show board | ✅ | Hide = small button bottom-right **of the board panel** ; Show = full-width when hidden |
-| LICENSE / NOTICE | ✅ | GPLv3 `LICENSE` + `NOTICE` added (required — Stockfish is GPLv3, vendored and statically linked) |
-| CI GitHub Actions | ✅ | `.github/workflows/ci.yml` — installs NDK 28.2.13676358 + CMake 3.22.1, `test` + `assembleDebug`, timeout 50 min |
-| Docker / Windows scripts | ✅ | Optional Docker ; primary workspace is Windows `D:\` |
-| Tests | ✅ | 91 JVM unit tests, all passing (`:core:chess:test` + `:app:testDebugUnitTest`) |
-| Web preview (`preview/`) | ⚠️ | Square Colors demo only — **stale**, does not reflect any drill added since |
+| Home screen | ✅ | 6 shared `ActionCard`s |
+| Drill « Find the Square » | ✅ | Coordinate → tap square ; **board forced visible** on start |
+| Drill « Square Colors » | ✅ | Random square → Light / Dark ; flash 0.5 s |
+| Drill « Piece Path » | ✅ | B/N/R/Q ; pad **or voice** ; illegal → reset + message ; unclear speech → message, no reset |
+| Drill « Famous Games » | ✅ | 6 games as home-style cards ; **Play this game** shows the board if hidden |
+| Drill « Free Board » | ✅ | Legal play, pad, taps, **voice** ; illegal move rejected, last legal position kept |
+| Mode « Play the Bot » | ✅ | Stockfish, Elo 1350–2500 ; Continue/Discard if a game is in progress ; last bot move large ; Play again |
+| Voice input | ✅ | Android `SpeechRecognizer` (free) ; Speak + FR/EN ; Free Board, Play the Bot, Piece Path |
+| Pieces / Flip / Arrows / Coordinates | ✅ | Unicode glyphs, orientation, path arrows |
+| Board visibility | ✅ | Hidden at launch and on Home ; Find the Square + Famous Games play open it |
+| Native Stockfish | ✅ | Vendored sf_15, JNI/UCI |
+| LICENSE / NOTICE | ✅ | GPLv3 (Stockfish) |
+| CI | ✅ | NDK + CMake, tests + APK debug |
+| Docker / Windows scripts | ✅ | Primary workspace Windows `D:\` |
+| Tests | ✅ | **116** JVM unit tests, all passing |
+| Web preview (`preview/`) | ⚠️ | Square Colors only — stale |
 
 ### Not started yet
 
 - More visualization drills (square names as a distinct drill from Find the Square, diagonals, knight tours)
-- Room (session history, progress) — no persistence yet, everything resets on process death
+- Room (session history, progress) — voice language is the only persistence (SharedPreferences)
 - ktlint / detekt
-- Voice input
 - iOS / KMP
 
 **Deliberately out of scope:** a tactical "blindfold puzzle" drill (isolated positions) — decided against, no clear value over the existing drills (Free Board / Famous Games / Play the Bot already cover applied visualization).
@@ -99,6 +95,8 @@ MainActivity
 - Highlight / arrows / pieces / selected square lifted to `MainActivity`, passed into `AppShell`
 - Feature folders: `feature/home`, `feature/drills`, `feature/board`
 - Native chess engine behind a `ChessEngine` interface (`engine/`), implemented by `StockfishChessEngine` talking UCI to the JNI bridge
+- Shared `ActionCard` for home drills and Famous Games library
+- Voice: `SpeechRecognizer` + `ChessSpeechParser` (no paid STT)
 
 **Key files:**
 ```
@@ -115,15 +113,15 @@ app/src/main/kotlin/com/blindfoldchess/trainer/
 │   │   └── ChessBoard.kt      # squares, pieces (glyphs), highlight, arrows, waypoint circles, flip
 │   ├── home/HomeScreen.kt
 │   └── drills/
-│       ├── CoordinatePad.kt          # shared file/rank input pad
-│       ├── DrillBackButton.kt        # shared back-to-home button
+│       ├── CoordinatePad.kt / DrillBackButton.kt
+│       ├── VoiceMoveInput.kt        # SpeechRecognizer, FR/EN toggle, Speak row
 │       ├── FindSquareScreen.kt / FindSquareViewModel.kt
 │       ├── SquareColorDrillScreen.kt / SquareColorDrillViewModel.kt
 │       ├── PiecePathDrillScreen.kt / PiecePathDrillViewModel.kt
 │       ├── FamousGamesScreen.kt / FamousGamesViewModel.kt
 │       ├── FreeBoardScreen.kt / FreeBoardViewModel.kt / FreeBoardPlayPad.kt
-│       └── PlayBotScreen.kt / PlayBotViewModel.kt   # extends FreeBoardViewModel
-└── ui/theme/
+│       └── PlayBotScreen.kt / PlayBotViewModel.kt
+└── ui/ActionCard.kt + ui/theme/
 
 app/src/main/cpp/                # vendored Stockfish sf_15 + JNI bridge (see Tech Stack)
 ├── CMakeLists.txt
@@ -138,15 +136,15 @@ core/chess/src/main/kotlin/.../
 ├── OccupiedSquare.kt              # board occupancy snapshot type
 ├── ChessSession.kt                # chesslib-backed session: SAN/UCI/square play, history, undo
 ├── ChesslibMapping.kt             # internal Square/Move/PieceType <-> chesslib mapping
-├── FamousGame.kt / FamousGamesCatalog.kt   # 6 historical games (Opera, Légal's Mate, Immortal, Evergreen, Réti, Game of the Century)
-└── GameFollowDrill.kt             # parses a FamousGame into replayable positions/moves
+├── FamousGame.kt / FamousGamesCatalog.kt
+├── GameFollowDrill.kt
+└── ChessSpeechParser.kt           # FR/EN speech → SAN / Piece Path square (S→F, pawn takes dest, castle aliases)
 ```
 
-**Tests (91 total, all passing):**
-- `core:chess` (40 tests) — `SquareColorTest`, `PieceMovesTest`, `FindSquareDrillTest`, `ChessSessionTest`, `GameFollowDrillTest`
-- `app` (51 tests) — `BoardArrowTest`, `PiecePathDrillViewModelTest`, `FindSquareViewModelTest`, `FamousGamesViewModelTest`, `FreeBoardViewModelTest`, `PlayBotViewModelTest`
-- Run with: `./gradlew :core:chess:test :app:testDebugUnitTest`
-- A full `assembleDebug` (including the native Stockfish build) has succeeded on this machine — `app/build/outputs/apk/debug/app-debug.apk` and `libstockfishjni.so` (arm64-v8a, x86_64) exist in `app/build/`.
+**Tests (116 total, all passing):**
+- `core:chess` (50) — `ChessSessionTest` (18), `ChessSpeechParserTest` (8), `GameFollowDrillTest` (8), `PieceMovesTest` (7), `SquareColorTest` (6), `FindSquareDrillTest` (3)
+- `app` (66) — `FreeBoardViewModelTest` (21), `FamousGamesViewModelTest` (16), `PiecePathDrillViewModelTest` (9), `PlayBotViewModelTest` (8), `FindSquareViewModelTest` (6), `BoardArrowTest` (5), `ParseBestMoveTest` (1)
+- Run: `./gradlew :core:chess:testDebugUnitTest :app:testDebugUnitTest`
 
 ---
 
@@ -155,26 +153,30 @@ core/chess/src/main/kotlin/.../
 - **Board zone height** = chessboard square (width minus 72 dp side column). Must **not** use `fillMaxHeight()` in a way that expands to the phone screen.
 - **Side column (top to bottom):** Hide board, Flip, Coordinates, Arrows, Pieces.
 - **Show board:** full-width outlined button above content, only when the board is hidden.
+- **Default hidden:** board starts hidden ; going Home hides it again. Find the Square start and Famous Games « Play this game » set it visible (no-op if already shown).
 - **Coordinates:** ranks 1–8 left, files a–h bottom only. Notation slot is always reserved (grid does not resize). Flips with the board.
 - **Pieces:** Unicode glyphs (♔♕♖♗♘♙), drawn from the current `OccupiedSquare` list; toggle hides them without losing board state.
 - **Flip:** swaps which side is at the bottom; applies to squares, pieces, arrows, highlight, and the tap overlay.
 - **Arrows:** consecutive legal moves of the current attempt/replay. Illegal reset clears arrows. Square Colors and Find the Square have none.
 - **Answer flash:** green / red overlay 0.5 s on the relevant square.
 - **Tap input:** `Free Board`, `Famous Games`, and `Play the Bot` also accept direct square taps (`onSquareClick`) in addition to the coordinate pad.
+- **Voice:** Speak + FR/EN on Free Board, Play the Bot, and Piece Path (`VoiceMoveInput.kt` + `ChessSpeechParser`).
 
 ---
 
 ## Drill / mode rules
 
-**Piece Path** — Pieces: bishop, knight, rook, queen (default knight). Empty-board legality via `PieceType.canMove`. Bishop puzzles stay on the same square color. Input: tap file then rank. Illegal move: immediate message, flash red, same start/target, piece back to start, path cleared. Reaching target: success, Next for a new puzzle.
+**Piece Path** — Bishop, knight, rook, queen (default knight). Empty-board legality via `PieceType.canMove`. Input: file then rank **or Speak**. Saying a piece name + square is preferred (`cavalier f 3`) ; a bare square (`h6`, `S5`→f5) uses the selected piece. Illegal move: *Illegal move — starting over*, path reset. Unclear speech (`P5`): *Couldn't understand that move*, position unchanged.
 
-**Find the Square** — inverse of Square Colors: a coordinate is shown, the player taps that square directly on the board.
+**Find the Square** — a coordinate is shown, the player taps that square. Starting the drill shows the board.
 
-**Famous Games** — pick a game from the library (title, players, event, year, result, move count); the app steps through it move by move, and the player must tap the piece and destination for the *given* move before it advances. Wrong attempt: message + retry, no penalty.
+**Famous Games** — library as home-style cards. **Play this game** shows the board if hidden, then the player taps the given move's from/to. Wrong attempt: retry, no penalty.
 
-**Free Board** — full legal chess from the start position (or any loaded FEN via `ChessSession`). Input via `CoordinatePad` (file → rank, capture toggle, castle buttons) or direct board taps; ambiguous moves prompt a file/rank disambiguation chip row. Step back/forward through history, undo the last move, reset the game. Check/checkmate/stalemate are surfaced in the UI.
+**Free Board** — legal chess. Pad (lowercase files, 50% frame opacity), board taps, or **Speak** (FR/EN). Status line: `White to move - NF3`. Illegal SAN/tap/voice: rejected, last legal position kept (`ChessSession.playSan` gated on `legalMoves()`). Voice: `e4`, `knight f3`, `pion prend F4` / `pawn takes F4`, `petit rock` / `castle`, `grand rock` / `long castle`. English STT `S5` is accepted as **f5**.
 
-**Play the Bot** — same engine as Free Board (`PlayBotViewModel extends FreeBoardViewModel`), plus: pick Elo (1350/1500/1700/1900/2100/2300/2500) and color before starting, bot move requested automatically via `StockfishChessEngine.bestMove(fen, elo)` on the bot's turn, "thinking…" / "bot could not move" states surfaced in the description line.
+**Play the Bot** — `PlayBotViewModel` extends `FreeBoardViewModel`, **one** engine instance. Setup Elo (1350–2500) + color. Re-entering with a live game: Continue / Discard. Last bot move shown large above the pad. Thinking on the side-to-move line. Checkmate / Stalemate (short labels) + **Play again** on the same row. Voice same as Free Board.
+
+**Voice (shared)** — Android `SpeechRecognizer`, no paid API. `RECORD_AUDIO`. Speak + FR/EN chips (persisted in SharedPreferences). Parser: `ChessSpeechParser`.
 
 ---
 
@@ -187,7 +189,7 @@ core/chess/src/main/kotlin/.../
 | Chess engine | Stockfish sf_15, vendored C++ source in `app/src/main/cpp/stockfish`, compiled to a JNI shared lib via CMake/NDK; driven over UCI through pipes (`bridge.cpp` / `NativeStockfish` / `StockfishChessEngine`) |
 | State | ViewModel + Kotlin Flow |
 | DB (future) | Room — not started |
-| Tests | JUnit in `:core:chess` and `:app` (91 tests) |
+| Tests | JUnit in `:core:chess` and `:app` (116 tests) |
 | CI | GitHub Actions `.github/workflows/ci.yml` — installs NDK 28.2.13676358 + CMake 3.22.1 for the native build |
 | DevOps optional | Docker + `docker-compose.yml` |
 | Licensing | GPLv3 (`LICENSE`), required by the vendored Stockfish; `NOTICE` documents Stockfish (GPLv3) and chesslib (Apache 2.0) provenance. App is intended for **free Play Store distribution** — publishing the APK is "conveying" under GPLv3 §6, so recipients must be able to get the source; the GitHub repo is already public, which covers that. Still missing: an in-app license/source link |
@@ -249,8 +251,8 @@ Avoid unless needed for Docker/terminal. `settings.gradle.kts` auto-fixes `local
 - [x] **Board orientation (flip)** — implemented
 - [x] **Stockfish vendored + compiled natively** (NDK/CMake, JNI/UCI bridge) — powers Play the Bot
 - [x] **GPLv3 licensing** adopted (forced by vendoring/statically-linking Stockfish)
+- [x] **Voice input** — Android SpeechRecognizer, FR/EN, Free Board / Play the Bot / Piece Path
 - [ ] Hidden board state for blindfold mode (FEN + mental tracking without visual aid)
-- [ ] Voice input optional
 - [ ] Session persistence (Room)
 
 ---
@@ -259,13 +261,14 @@ Avoid unless needed for Docker/terminal. `settings.gradle.kts` auto-fixes `local
 
 1. ~~Visualization drill: square colors~~ ✅
 2. ~~Piece path drill (B/N/R/Q)~~ ✅
-3. ~~Pieces (or at least the moving piece) on the board~~ ✅
+3. ~~Pieces on the board~~ ✅
 4. ~~Find the Square drill~~ ✅
 5. ~~Famous games (guided replay)~~ ✅
 6. ~~Free board + Play vs. Stockfish~~ ✅
-7. Add an in-app license/source link — the repo is already public (satisfies GPLv3 §6), this closes the remaining gap before Play Store publication
-8. Room: gentle session history + stats (no streaks)
-9. PGN import (post-MVP)
+7. ~~Voice input (Speak, FR/EN)~~ ✅
+8. Add an in-app license/source link — remaining gap before Play Store publication
+9. Room: gentle session history + stats (no streaks)
+10. PGN import (post-MVP)
 
 ---
 
@@ -273,13 +276,14 @@ Avoid unless needed for Docker/terminal. `settings.gradle.kts` auto-fixes `local
 
 Pick **one** feature at a time:
 
-1. **Add an in-app license/source link** (e.g. an "About" screen) — the repo is already public, satisfying GPLv3 §6; this is the remaining piece before Play Store publication. See the Licensing row above.
-2. **True blindfold mode** — a way to hide the board mid-drill/game while still tracking the position mentally (distinct from the existing Hide-board toggle, which currently just stops rendering, not a graded blindfold challenge).
-3. **Room** — gentle session history (no streaks), once the current drill set feels stable.
-4. **Square names drill** — distinct from Find the Square (name a shown square, rather than tap a named one), reusing `CoordinatePad`.
-5. **Cap Piece Path / Find the Square difficulty** (e.g. knight 1–3 moves) so blindfold attempts stay fair.
-6. Add `ktlint`/`detekt`.
-7. `preview/index.html` is stale — update or remove it now that there are 6 drills, not 1.
+1. **Commit** the current uncommitted voice / UI / Play-the-Bot / SAN-legality work.
+2. **In-app license/source link** (About screen) before Play Store publication.
+3. **True blindfold mode** — hide the board *during* a drill as a graded challenge (distinct from Hide, which only stops rendering).
+4. **Room** — gentle session history (no streaks).
+5. **Square names drill** — name a shown square, reusing `CoordinatePad`.
+6. **Cap Piece Path / Find the Square difficulty** (e.g. knight 1–3 moves).
+7. `ktlint` / `detekt`.
+8. `preview/index.html` is stale — update or remove.
 
 Not planned: a tactical "blindfold puzzle" drill — deliberately dropped, see "Deliberately out of scope" above.
 

@@ -65,13 +65,20 @@ class ChessSession(
         val token = san.trim()
         if (token.isEmpty() || board.isMated || board.isStaleMate) return PlayResult.Illegal
         val fenBefore = board.fen
-        return try {
-            if (!board.doMove(token)) return PlayResult.Illegal
-            val executed = board.undoMove() ?: return PlayResult.Illegal
-            commit(fenBefore, executed, preferredSan = stripMoveNumber(token))
+        val decoded = try {
+            val probe = MoveList(fenBefore)
+            probe.addSanMove(token, true, true)
+            probe.lastOrNull()
         } catch (_: Exception) {
-            PlayResult.Illegal
+            null
+        } ?: return PlayResult.Illegal
+        val legal = board.legalMoves().filter { candidate ->
+            candidate.getFrom() == decoded.getFrom() &&
+                candidate.getTo() == decoded.getTo() &&
+                candidate.getPromotion() == decoded.getPromotion()
         }
+        val move = legal.singleOrNull() ?: return PlayResult.Illegal
+        return commit(fenBefore, move, preferredSan = stripMoveNumber(token))
     }
 
     fun originsFor(man: ChessMan, to: Square, capture: Boolean = false): List<Square> {

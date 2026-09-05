@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -43,66 +44,136 @@ fun PlayBotScreen(
     onPiecesChange: (List<OccupiedSquare>) -> Unit = {},
     onSelectedSquareChange: (Square?) -> Unit = {},
     onSquareClickChange: (((Square) -> Unit)?) -> Unit = {},
+    viewModel: PlayBotViewModel = viewModel(factory = PlayBotViewModelFactory()),
 ) {
-    var started by rememberSaveable { mutableStateOf(false) }
-    var elo by rememberSaveable { mutableIntStateOf(1500) }
-    var playerIsWhite by rememberSaveable { mutableStateOf(true) }
+    val uiState by viewModel.uiState.collectAsState()
+    val phase by viewModel.phase.collectAsState()
 
-    if (!started) {
-        PlayBotSetup(
-            elo = elo,
-            onEloChange = { elo = it },
-            playerIsWhite = playerIsWhite,
-            onPlayerIsWhiteChange = { playerIsWhite = it },
-            onStart = { started = true },
+    DisposableEffect(viewModel) {
+        onDispose { viewModel.onLeaveScreen() }
+    }
+
+    when (phase) {
+        PlayBotPhase.Setup -> PlayBotSetup(
+            onStart = viewModel::startGame,
             onBack = onBack,
         )
-        return
+        PlayBotPhase.ResumePrompt -> PlayBotResume(
+            elo = uiState.botElo ?: 1500,
+            playerIsWhite = uiState.playerIsWhite ?: true,
+            onContinue = viewModel::continueGame,
+            onDiscard = viewModel::discardGame,
+            onBack = onBack,
+        )
+        PlayBotPhase.Playing -> {
+            BoardPlayEffects(
+                uiState = uiState,
+                viewModel = viewModel,
+                onSquareHighlight = onSquareHighlight,
+                onMoveArrows = onMoveArrows,
+                onPiecesChange = onPiecesChange,
+                onSelectedSquareChange = onSelectedSquareChange,
+                onSquareClickChange = onSquareClickChange,
+            )
+
+            val playerIsWhite = uiState.playerIsWhite
+            val botLastMove = if (playerIsWhite == null) {
+                ""
+            } else {
+                uiState.moves.lastOrNull { it.isWhite != playerIsWhite }?.prompt.orEmpty()
+            }
+
+            FreeBoardPlayBody(
+                title = stringResource(R.string.drill_play_bot_title),
+                description = stringResource(
+                    R.string.play_bot_playing_as,
+                    uiState.botElo ?: 0,
+                    stringResource(
+                        if (uiState.playerIsWhite != false) {
+                            R.string.famous_games_white
+                        } else {
+                            R.string.famous_games_black
+                        },
+                    ),
+                ),
+                uiState = uiState,
+                botLastMove = botLastMove,
+                viewModel = viewModel,
+                onBack = onBack,
+                onPlayAgain = viewModel::discardGame,
+            )
+        }
     }
+}
 
-    val viewModel: PlayBotViewModel = viewModel(
-        key = "play-bot-$elo-$playerIsWhite",
-        factory = PlayBotViewModelFactory(elo, playerIsWhite),
-    )
-    val uiState by viewModel.uiState.collectAsState()
+@Composable
+private fun PlayBotResume(
+    elo: Int,
+    playerIsWhite: Boolean,
+    onContinue: () -> Unit,
+    onDiscard: () -> Unit,
+    onBack: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        DrillPageHeader(
+            title = stringResource(R.string.drill_play_bot_title),
+            description = stringResource(R.string.play_bot_game_in_progress),
+            onHome = onBack,
+        )
 
-    BoardPlayEffects(
-        uiState = uiState,
-        viewModel = viewModel,
-        onSquareHighlight = onSquareHighlight,
-        onMoveArrows = onMoveArrows,
-        onPiecesChange = onPiecesChange,
-        onSelectedSquareChange = onSelectedSquareChange,
-        onSquareClickChange = onSquareClickChange,
-    )
+        Spacer(modifier = Modifier.height(16.dp))
 
-    val extraHint = when {
-        uiState.botThinking -> stringResource(R.string.play_bot_thinking)
-        uiState.botFailed -> stringResource(R.string.play_bot_failed)
-        else -> null
+        Text(
+            text = stringResource(
+                R.string.play_bot_playing_as,
+                elo,
+                stringResource(
+                    if (playerIsWhite) R.string.famous_games_white else R.string.famous_games_black,
+                ),
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Button(
+            onClick = onContinue,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.play_bot_continue))
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedButton(
+            onClick = onDiscard,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.play_bot_discard))
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        DrillBackButton(onClick = onBack)
+        Spacer(modifier = Modifier.height(16.dp))
     }
-
-    FreeBoardPlayBody(
-        title = stringResource(R.string.drill_play_bot_title),
-        description = stringResource(R.string.play_bot_playing_as, elo, stringResource(
-            if (playerIsWhite) R.string.famous_games_white else R.string.famous_games_black,
-        )),
-        uiState = uiState,
-        extraHint = extraHint,
-        viewModel = viewModel,
-        onBack = onBack,
-    )
 }
 
 @Composable
 private fun PlayBotSetup(
-    elo: Int,
-    onEloChange: (Int) -> Unit,
-    playerIsWhite: Boolean,
-    onPlayerIsWhiteChange: (Boolean) -> Unit,
-    onStart: () -> Unit,
+    onStart: (elo: Int, playerIsWhite: Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
+    var elo by rememberSaveable { mutableIntStateOf(1500) }
+    var playerIsWhite by rememberSaveable { mutableStateOf(true) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -133,7 +204,7 @@ private fun PlayBotSetup(
                 row.forEach { level ->
                     FilterChip(
                         selected = elo == level,
-                        onClick = { onEloChange(level) },
+                        onClick = { elo = level },
                         label = { Text(level.toString()) },
                     )
                 }
@@ -155,21 +226,21 @@ private fun PlayBotSetup(
         ) {
             val whiteModifier = Modifier.weight(1f)
             if (playerIsWhite) {
-                Button(onClick = { onPlayerIsWhiteChange(true) }, modifier = whiteModifier) {
+                Button(onClick = { playerIsWhite = true }, modifier = whiteModifier) {
                     Text(stringResource(R.string.famous_games_white), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 }
             } else {
-                OutlinedButton(onClick = { onPlayerIsWhiteChange(true) }, modifier = whiteModifier) {
+                OutlinedButton(onClick = { playerIsWhite = true }, modifier = whiteModifier) {
                     Text(stringResource(R.string.famous_games_white), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 }
             }
             val blackModifier = Modifier.weight(1f)
             if (!playerIsWhite) {
-                Button(onClick = { onPlayerIsWhiteChange(false) }, modifier = blackModifier) {
+                Button(onClick = { playerIsWhite = false }, modifier = blackModifier) {
                     Text(stringResource(R.string.famous_games_black), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 }
             } else {
-                OutlinedButton(onClick = { onPlayerIsWhiteChange(false) }, modifier = blackModifier) {
+                OutlinedButton(onClick = { playerIsWhite = false }, modifier = blackModifier) {
                     Text(stringResource(R.string.famous_games_black), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 }
             }
@@ -178,7 +249,7 @@ private fun PlayBotSetup(
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = onStart,
+            onClick = { onStart(elo, playerIsWhite) },
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(stringResource(R.string.play_bot_start))

@@ -134,6 +134,21 @@ class FreeBoardViewModelTest {
     }
 
     @Test
+    fun `spoken pawn takes destination captures from the adjacent file`() {
+        val viewModel = FreeBoardViewModel(
+            ChessSession("4k3/8/8/4p3/5P2/8/8/4K3 b - - 0 1"),
+        )
+        viewModel.playSpoken(listOf("pion prend F4"))
+
+        val state = viewModel.uiState.value
+        assertEquals(1, state.moves.size)
+        assertEquals("e5", state.moves.single().from.algebraic)
+        assertEquals("f4", state.moves.single().to.algebraic)
+        assertTrue(state.pieces.none { it.square.algebraic == "f4" && it.isWhite })
+        assertTrue(state.pieces.any { it.square.algebraic == "f4" && it.man == ChessMan.PAWN && !it.isWhite })
+    }
+
+    @Test
     fun `kingside castle button plays O-O`() {
         val session = ChessSession()
         "e4 e5 Nf3 Nc6 Bc4 Bc5".split(" ").forEach { session.playSan(it) }
@@ -258,6 +273,51 @@ class FreeBoardViewModelTest {
         assertTrue(state.moves.isEmpty())
         assertTrue(state.isWhiteToMove)
         assertEquals(32, state.pieces.size)
+    }
+
+    @Test
+    fun `spoken pawn push plays like the pad`() {
+        val viewModel = FreeBoardViewModel()
+        viewModel.playSpoken(listOf("e four"))
+
+        val state = viewModel.uiState.value
+        assertEquals("e4", state.moves.single().san)
+        assertEquals(true, state.lastAttemptCorrect)
+        assertNull(state.lastSpoken)
+    }
+
+    @Test
+    fun `spoken knight move plays SAN`() {
+        val viewModel = FreeBoardViewModel()
+        viewModel.playSpoken(listOf("knight f 3"))
+        assertEquals("Nf3", viewModel.uiState.value.moves.single().san)
+    }
+
+    @Test
+    fun `spoken illegal move flashes and keeps the transcript`() {
+        val viewModel = FreeBoardViewModel()
+        viewModel.playSpoken(listOf("queen h5"))
+
+        val state = viewModel.uiState.value
+        assertEquals(false, state.lastAttemptCorrect)
+        assertEquals("queen h5", state.lastSpoken)
+        assertTrue(state.moves.isEmpty())
+    }
+
+    @Test
+    fun `illegal spoken pawn leap stays on the last legal position`() {
+        val viewModel = FreeBoardViewModel()
+        viewModel.playSpoken(listOf("e4"))
+        viewModel.playSpoken(listOf("e5"))
+        viewModel.playSpoken(listOf("e5"))
+
+        val afterIllegal = viewModel.uiState.value
+        assertEquals(false, afterIllegal.lastAttemptCorrect)
+        assertEquals(listOf("e4", "e5"), afterIllegal.moves.map { it.san })
+        assertTrue(afterIllegal.isWhiteToMove)
+
+        viewModel.playSpoken(listOf("knight f 3"))
+        assertEquals(listOf("e4", "e5", "Nf3"), viewModel.uiState.value.moves.map { it.san })
     }
 
     private fun sq(notation: String): Square = Square.fromAlgebraic(notation)!!

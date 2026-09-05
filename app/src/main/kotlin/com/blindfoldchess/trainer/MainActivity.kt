@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
             BlindfoldChessTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     var screen by rememberSaveable { mutableStateOf(AppScreen.Home) }
-                    var isBoardVisible by rememberSaveable { mutableStateOf(true) }
+                    var isBoardVisible by rememberSaveable { mutableStateOf(false) }
                     var showNotation by rememberSaveable { mutableStateOf(true) }
                     var showArrows by rememberSaveable { mutableStateOf(true) }
                     var showPieces by rememberSaveable { mutableStateOf(true) }
@@ -52,6 +52,7 @@ class MainActivity : ComponentActivity() {
                         boardPieces = emptyList()
                         selectedSquare = null
                         onBoardSquareClick = null
+                        isBoardVisible = false
                         screen = AppScreen.Home
                     }
 
@@ -78,6 +79,7 @@ class MainActivity : ComponentActivity() {
                                     moveArrows = emptyList()
                                     boardPieces = emptyList()
                                     selectedSquare = null
+                                    isBoardVisible = true
                                     screen = AppScreen.FindSquare
                                 },
                                 onStartSquareColorDrill = {
@@ -119,6 +121,7 @@ class MainActivity : ComponentActivity() {
                                 onPiecesChange = { boardPieces = it },
                                 onSelectedSquareChange = { selectedSquare = it },
                                 onSquareClickChange = { onBoardSquareClick = it },
+                                onShowBoard = { isBoardVisible = true },
                             )
                             AppScreen.PlayBot -> PlayBotScreen(
                                 onBack = goHome,
