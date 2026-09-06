@@ -31,7 +31,7 @@ Branch: `main`.
 | Board visibility | ✅ | Hidden at launch and when returning Home; Find the Square, Name the Square, and Famous Games (Play this game) open it |
 | Native Stockfish | ✅ | Vendored sf_15, JNI/UCI, `libstockfishjni.so` |
 | `LICENSE` / `NOTICE` | ✅ | GPLv3 (Stockfish) |
-| Unit tests | ✅ | **130** tests (`:core:chess:testDebugUnitTest` + `:app:testDebugUnitTest`)
+| Unit tests | ✅ | **136** tests (`:core:chess:testDebugUnitTest` + `:app:testDebugUnitTest`)
 | GitHub Actions CI | ✅ | NDK + CMake, tests + debug APK |
 | Room (session history) | ❌ | not started |
 | Web preview (`preview/`) | ⚠️ | Square Colors demo only — **stale** |
@@ -44,7 +44,7 @@ Branch: `main`.
 4. **Piece Path** — piece, start → target. Pad or **Speak** (`cavalier f 3`, or just `h6` / `S5`→f5). Illegal → reset + message. Unclear speech (`P5`) → *Couldn't understand* without reset.
 5. **Famous Games** — game cards, **Play this game** (opens the board), replay each announced move.
 6. **Free Board** — pad, tap, or voice (`e4`, `knight f3`, `pion prend F4`, `petit rock` / `castle`). Illegal → message, position unchanged.
-7. **Play the Bot** — Elo + color; if a game already exists: Continue / Discard. Last bot move large. Checkmate/stalemate + **Play again**. Voice same as Free Board.
+7. **Play the Bot** — Elo + color; if a game already exists: Continue / Discard. Last bot move large **and spoken** (FR/EN). Checkmate/stalemate + **Play again**. Voice input same as Free Board.
 
 ---
 
@@ -257,7 +257,7 @@ The APK is written to `app/build/outputs/apk/debug/` on your disk (mounted volum
 6. **Piece Path** — piece selector, `e2 → f4`, pad (lowercase files) + **Speak** (FR/EN). Illegal: *Illegal move — starting over*. Unclear speech: *Couldn't understand that move*.
 7. **Famous Games** — 6 cards (same style as Home); Play this game opens the board; one announced move at a time.
 8. **Free Board** — pad (lowercase files, frames at 50% opacity), tap, **Speak**. Side to move and draft on one line (`White to move - NF3`). Illegal: rejected, position unchanged.
-9. **Play the Bot** — Elo/color setup; if a game is in progress: Continue / Discard. Last bot move large; *White to move · Bot is thinking…*; checkmate/stalemate + Play again on the same row. Voice same as Free Board.
+9. **Play the Bot** — Elo/color setup; if a game is in progress: Continue / Discard. Last bot move large and **spoken** (Speak chips FR/EN); *White to move · Bot is thinking…*; checkmate/stalemate + Play again on the same row. Voice input same as Free Board.
 10. **About & license** — quiet link at the bottom of Home: GPLv3, Stockfish, chesslib, buttons to the repo, the LICENSE file, and the privacy policy.
 11. **Back / home cube** — return Home (board hidden).
 

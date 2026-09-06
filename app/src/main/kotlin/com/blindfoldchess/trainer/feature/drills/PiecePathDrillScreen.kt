@@ -201,19 +201,19 @@ fun PiecePathDrillScreen(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        VoiceSpeakRow(
-            enabled = padEnabled,
+        InputMethodControls(
+            voiceEnabled = padEnabled,
             voice = voice,
             language = speechLanguage,
             onLanguage = setSpeechLanguage,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        CoordinatePad(
-            pendingFile = uiState.pendingFile,
-            enabled = padEnabled,
-            onFile = viewModel::onFile,
-            onRank = viewModel::onRank,
-        )
+        ) {
+            CoordinatePad(
+                pendingFile = uiState.pendingFile,
+                enabled = padEnabled,
+                onFile = viewModel::onFile,
+                onRank = viewModel::onRank,
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 

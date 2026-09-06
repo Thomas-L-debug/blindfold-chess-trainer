@@ -1,10 +1,6 @@
 package com.blindfoldchess.trainer.feature.drills
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,9 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -27,13 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.PlatformTextStyle
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -367,85 +356,6 @@ private fun FamousGameReplay(
     }
 }
 
-@Composable
-private fun ReplayNavigation(
-    canGoToStart: Boolean,
-    canStepBack: Boolean,
-    canStepForward: Boolean,
-    canGoToLatest: Boolean,
-    onGoToStart: () -> Unit,
-    onStepBack: () -> Unit,
-    onStepForward: () -> Unit,
-    onGoToLatest: () -> Unit,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        NavButton(
-            label = stringResource(R.string.famous_games_nav_start),
-            enabled = canGoToStart,
-            onClick = onGoToStart,
-            modifier = Modifier.weight(1f),
-        )
-        NavButton(
-            label = stringResource(R.string.famous_games_nav_back),
-            enabled = canStepBack,
-            onClick = onStepBack,
-            modifier = Modifier.weight(1f),
-            largeGlyph = true,
-        )
-        NavButton(
-            label = stringResource(R.string.famous_games_nav_forward),
-            enabled = canStepForward,
-            onClick = onStepForward,
-            modifier = Modifier.weight(1f),
-            largeGlyph = true,
-        )
-        NavButton(
-            label = stringResource(R.string.famous_games_nav_latest),
-            enabled = canGoToLatest,
-            onClick = onGoToLatest,
-            modifier = Modifier.weight(1f),
-        )
-    }
-}
 
-@Composable
-private fun NavButton(
-    label: String,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    largeGlyph: Boolean = false,
-) {
-    OutlinedButton(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = modifier.height(ButtonDefaults.MinHeight),
-        contentPadding = PaddingValues(0.dp),
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            val glyphLift = with(LocalDensity.current) { if (largeGlyph) -6.dp.toPx() else 0f }
-            Text(
-                text = label,
-                modifier = Modifier.graphicsLayer { translationY = glyphLift },
-                fontSize = if (largeGlyph) 28.sp else MaterialTheme.typography.labelLarge.fontSize,
-                lineHeight = if (largeGlyph) 28.sp else MaterialTheme.typography.labelLarge.lineHeight,
-                textAlign = TextAlign.Center,
-                style = TextStyle(
-                    platformStyle = PlatformTextStyle(includeFontPadding = false),
-                    lineHeightStyle = LineHeightStyle(
-                        alignment = LineHeightStyle.Alignment.Center,
-                        trim = LineHeightStyle.Trim.Both,
-                    ),
-                ),
-            )
-        }
-    }
-}
 
 

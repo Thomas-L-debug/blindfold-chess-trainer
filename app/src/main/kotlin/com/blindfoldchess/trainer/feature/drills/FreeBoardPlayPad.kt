@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -24,26 +23,24 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.blindfoldchess.trainer.R
 import com.blindfoldchess.trainer.core.chess.ChessMan
+import com.blindfoldchess.trainer.core.chess.ChessMoveAnnouncer
 import com.blindfoldchess.trainer.ui.theme.Correct
 import com.blindfoldchess.trainer.ui.theme.Incorrect
 import kotlinx.coroutines.delay
@@ -57,6 +54,8 @@ internal fun FreeBoardPlayBody(
     uiState: FreeBoardUiState,
     extraHint: String? = null,
     botLastMove: String? = null,
+    botLastMoveSan: String? = null,
+    botLastMovePly: Int? = null,
     viewModel: FreeBoardViewModel,
     onBack: () -> Unit,
     onPlayAgain: (() -> Unit)? = null,
@@ -68,6 +67,34 @@ internal fun FreeBoardPlayBody(
         languageTag = speechLanguage.tag,
         onUtterances = viewModel::playSpoken,
     )
+    val tts = rememberChessTts()
+    var announcedBotPly by rememberSaveable { mutableIntStateOf(-1) }
+    var announcedBotLang by rememberSaveable { mutableStateOf("") }
+    LaunchedEffect(voice.listening) {
+        if (voice.listening) tts.stop()
+    }
+    LaunchedEffect(botLastMovePly, botLastMoveSan, speechLanguage) {
+        val ply = botLastMovePly
+        val san = botLastMoveSan.orEmpty()
+        if (ply == null || san.isBlank()) return@LaunchedEffect
+        val language = if (speechLanguage == VoiceSpeechLanguage.French) {
+            ChessMoveAnnouncer.Language.French
+        } else {
+            ChessMoveAnnouncer.Language.English
+        }
+        val phrase = ChessMoveAnnouncer.spoken(san, language)
+        if (phrase.isBlank()) return@LaunchedEffect
+        val langChanged = announcedBotLang.isNotEmpty() && announcedBotLang != speechLanguage.tag
+        when {
+            ply < announcedBotPly -> announcedBotPly = ply
+            ply == announcedBotPly && !langChanged -> return@LaunchedEffect
+            else -> {
+                announcedBotPly = ply
+                announcedBotLang = speechLanguage.tag
+                tts.speak(phrase, speechLanguage.tag)
+            }
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -208,71 +235,69 @@ internal fun FreeBoardPlayBody(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        VoiceSpeakRow(
-            enabled = uiState.inputEnabled,
+        InputMethodControls(
+            voiceEnabled = uiState.inputEnabled,
             voice = voice,
             language = speechLanguage,
             onLanguage = setSpeechLanguage,
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        KeyFrame {
-            PieceTypeSelector(
-                selected = uiState.selectedMan,
-                enabled = padEnabled,
-                onSelect = viewModel::selectMan,
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        KeyFrame {
-            CaptureAndCastleRow(
-                capturing = uiState.capturing,
-                enabled = padEnabled,
-                onToggleCapture = viewModel::toggleCapture,
-                onCastle = viewModel::castle,
-            )
-        }
-
-        val disambiguation = uiState.disambiguation
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            KeyFrame(modifier = Modifier.weight(1f)) {
-                FilePad(
-                    pendingFile = uiState.pendingFile,
-                    enabled = if (disambiguation != null) {
-                        disambiguation.askFile
-                    } else {
-                        uiState.inputEnabled
-                    },
-                    onFile = viewModel::onFile,
-                    highlightedFiles = when {
-                        disambiguation?.askFile == true ->
-                            disambiguation.options.map { it[0] }.toSet()
-                        else -> setOfNotNull(uiState.originFile)
-                    },
-                    uppercaseLabels = false,
+            KeyFrame {
+                PieceTypeSelector(
+                    selected = uiState.selectedMan,
+                    enabled = padEnabled,
+                    onSelect = viewModel::selectMan,
                 )
             }
-            KeyFrame(modifier = Modifier.weight(1f)) {
-                RankPad(
-                    enabled = if (disambiguation != null) {
-                        !disambiguation.askFile
-                    } else {
-                        uiState.inputEnabled
-                    },
-                    onRank = viewModel::onRank,
-                    highlightedRanks = when {
-                        disambiguation != null && !disambiguation.askFile ->
-                            disambiguation.options.mapNotNull { it.toIntOrNull() }.toSet()
-                        else -> setOfNotNull(uiState.originRank)
-                    },
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            KeyFrame {
+                CaptureAndCastleRow(
+                    capturing = uiState.capturing,
+                    enabled = padEnabled,
+                    onToggleCapture = viewModel::toggleCapture,
+                    onCastle = viewModel::castle,
                 )
+            }
+
+            val disambiguation = uiState.disambiguation
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                KeyFrame(modifier = Modifier.weight(1f)) {
+                    FilePad(
+                        pendingFile = uiState.pendingFile,
+                        enabled = if (disambiguation != null) {
+                            disambiguation.askFile
+                        } else {
+                            uiState.inputEnabled
+                        },
+                        onFile = viewModel::onFile,
+                        highlightedFiles = when {
+                            disambiguation?.askFile == true ->
+                                disambiguation.options.map { it[0] }.toSet()
+                            else -> setOfNotNull(uiState.originFile)
+                        },
+                        uppercaseLabels = false,
+                    )
+                }
+                KeyFrame(modifier = Modifier.weight(1f)) {
+                    RankPad(
+                        enabled = if (disambiguation != null) {
+                            !disambiguation.askFile
+                        } else {
+                            uiState.inputEnabled
+                        },
+                        onRank = viewModel::onRank,
+                        highlightedRanks = when {
+                            disambiguation != null && !disambiguation.askFile ->
+                                disambiguation.options.mapNotNull { it.toIntOrNull() }.toSet()
+                            else -> setOfNotNull(uiState.originRank)
+                        },
+                    )
+                }
             }
         }
 
@@ -292,7 +317,7 @@ internal fun FreeBoardPlayBody(
         Spacer(modifier = Modifier.height(16.dp))
 
         KeyFrame {
-            LineNavigation(
+            ReplayNavigation(
                 canGoToStart = uiState.canGoToStart && !uiState.botThinking,
                 canStepBack = uiState.canStepBack && !uiState.botThinking,
                 canStepForward = uiState.canStepForward && !uiState.botThinking,
@@ -348,87 +373,6 @@ internal fun KeyFrame(
             .padding(10.dp),
     ) {
         content()
-    }
-}
-
-@Composable
-private fun LineNavigation(
-    canGoToStart: Boolean,
-    canStepBack: Boolean,
-    canStepForward: Boolean,
-    canGoToLatest: Boolean,
-    onGoToStart: () -> Unit,
-    onStepBack: () -> Unit,
-    onStepForward: () -> Unit,
-    onGoToLatest: () -> Unit,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        NavButton(
-            label = stringResource(R.string.famous_games_nav_start),
-            enabled = canGoToStart,
-            onClick = onGoToStart,
-            modifier = Modifier.weight(1f),
-        )
-        NavButton(
-            label = stringResource(R.string.famous_games_nav_back),
-            enabled = canStepBack,
-            onClick = onStepBack,
-            modifier = Modifier.weight(1f),
-            largeGlyph = true,
-        )
-        NavButton(
-            label = stringResource(R.string.famous_games_nav_forward),
-            enabled = canStepForward,
-            onClick = onStepForward,
-            modifier = Modifier.weight(1f),
-            largeGlyph = true,
-        )
-        NavButton(
-            label = stringResource(R.string.famous_games_nav_latest),
-            enabled = canGoToLatest,
-            onClick = onGoToLatest,
-            modifier = Modifier.weight(1f),
-        )
-    }
-}
-
-@Composable
-private fun NavButton(
-    label: String,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    largeGlyph: Boolean = false,
-) {
-    OutlinedButton(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = modifier.height(ButtonDefaults.MinHeight),
-        contentPadding = PaddingValues(0.dp),
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            val glyphLift = with(LocalDensity.current) { if (largeGlyph) -6.dp.toPx() else 0f }
-            Text(
-                text = label,
-                modifier = Modifier.graphicsLayer { translationY = glyphLift },
-                fontSize = if (largeGlyph) 28.sp else MaterialTheme.typography.labelLarge.fontSize,
-                lineHeight = if (largeGlyph) 28.sp else MaterialTheme.typography.labelLarge.lineHeight,
-                textAlign = TextAlign.Center,
-                style = TextStyle(
-                    platformStyle = PlatformTextStyle(includeFontPadding = false),
-                    lineHeightStyle = LineHeightStyle(
-                        alignment = LineHeightStyle.Alignment.Center,
-                        trim = LineHeightStyle.Trim.Both,
-                    ),
-                ),
-            )
-        }
     }
 }
 

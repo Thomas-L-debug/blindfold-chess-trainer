@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.blindfoldchess.trainer.R
 import com.blindfoldchess.trainer.core.chess.OccupiedSquare
 import com.blindfoldchess.trainer.core.chess.Square
@@ -155,8 +156,13 @@ private fun BoardToggle(
 private fun ToggleLabel(label: String) {
     Text(
         text = label,
-        style = MaterialTheme.typography.labelSmall,
+        style = MaterialTheme.typography.labelSmall.copy(
+            fontSize = 9.sp,
+            lineHeight = 10.sp,
+            letterSpacing = 0.sp,
+        ),
         textAlign = TextAlign.Center,
-        maxLines = 2,
+        maxLines = 1,
+        softWrap = false,
     )
 }

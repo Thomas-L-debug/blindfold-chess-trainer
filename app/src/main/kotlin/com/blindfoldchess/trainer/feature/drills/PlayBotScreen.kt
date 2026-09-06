@@ -77,10 +77,10 @@ fun PlayBotScreen(
             )
 
             val playerIsWhite = uiState.playerIsWhite
-            val botLastMove = if (playerIsWhite == null) {
-                ""
+            val botMove = if (playerIsWhite == null) {
+                null
             } else {
-                uiState.moves.lastOrNull { it.isWhite != playerIsWhite }?.prompt.orEmpty()
+                uiState.moves.lastOrNull { it.isWhite != playerIsWhite }
             }
 
             FreeBoardPlayBody(
@@ -97,7 +97,9 @@ fun PlayBotScreen(
                     ),
                 ),
                 uiState = uiState,
-                botLastMove = botLastMove,
+                botLastMove = botMove?.prompt.orEmpty(),
+                botLastMoveSan = botMove?.san,
+                botLastMovePly = botMove?.plyIndex,
                 viewModel = viewModel,
                 onBack = onBack,
                 onPlayAgain = viewModel::discardGame,

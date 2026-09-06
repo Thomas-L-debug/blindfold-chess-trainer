@@ -66,7 +66,7 @@
     <string name="famous_games_replay">Replay</string>
     <string name="famous_games_library">Library</string>
     <string name="drill_free_board_title">Free Board</string>
-    <string name="drill_free_board_description">Play any legal move on the board, or enter manually a move - ex : RA1 | E4 | NxF3 | RAxE1</string>
+    <string name="drill_free_board_description">Play any legal move on the board, or enter manually a move - ex : Ra1 | e4 | Nxf3 | Raxe1</string>
     <string name="free_board_capture">x</string>
     <string name="free_board_castle_short">O-O</string>
     <string name="free_board_castle_long">O-O-O</string>
@@ -92,6 +92,8 @@
     <string name="play_bot_thinking">Bot is thinking…</string>
     <string name="play_bot_failed">The bot could not move</string>
     <string name="play_bot_play_again">Play again</string>
+    <string name="input_pad">Pad</string>
+    <string name="input_voice">Voice</string>
     <string name="voice_speak">Speak</string>
     <string name="voice_lang_fr">FR</string>
     <string name="voice_lang_en">EN</string>

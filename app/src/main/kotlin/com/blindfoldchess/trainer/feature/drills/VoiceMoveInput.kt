@@ -52,6 +52,7 @@ internal data class VoiceInputState(
     val error: String?,
     val available: Boolean,
     val onClick: () -> Unit,
+    val cancel: () -> Unit,
 )
 
 private const val VOICE_PREFS = "voice_input"
@@ -194,13 +195,16 @@ internal fun rememberVoiceInput(
         }
     }
 
+    val cancel = {
+        runCatching { recognizer?.cancel() }
+        listening = false
+        error = null
+    }
+
     val onClick = {
         when {
             !enabledState.value -> Unit
-            listening -> {
-                runCatching { recognizer?.cancel() }
-                listening = false
-            }
+            listening -> cancel()
             !available -> error = errorUnavailable
             ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) !=
                 PackageManager.PERMISSION_GRANTED -> {
@@ -215,6 +219,7 @@ internal fun rememberVoiceInput(
         error = error,
         available = available,
         onClick = onClick,
+        cancel = cancel,
     )
 }
 

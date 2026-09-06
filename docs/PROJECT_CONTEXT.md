@@ -44,13 +44,14 @@ Goal: peaceful, pleasant training at the user's own pace.
 | Voice input | ✅ | Android `SpeechRecognizer` (free) ; Speak + FR/EN ; Free Board, Play the Bot, Piece Path, Name the Square |
 | About / license | ✅ | Home link ; GPLv3 notice + GitHub source |
 | Privacy policy | ✅ | `docs/PRIVACY.md` (EN+FR) ; About screen + Play URL |
+| Play listing copy | ✅ | `docs/PLAY_LISTING.md` (EN+FR texts + sideload APK) |
 | Pieces / Flip / Arrows / Coordinates | ✅ | Unicode glyphs, orientation, path arrows |
 | Board visibility | ✅ | Hidden at launch and on Home ; Find the Square, Name the Square, and Famous Games play open it |
 | Native Stockfish | ✅ | Vendored sf_15, JNI/UCI |
 | LICENSE / NOTICE | ✅ | GPLv3 (Stockfish) |
 | CI | ✅ | NDK + CMake, tests + APK debug |
 | Docker / Windows scripts | ✅ | Primary workspace Windows `D:\` |
-| Tests | ✅ | **130** JVM unit tests, all passing |
+| Tests | ✅ | **136** JVM unit tests, all passing |
 | Web preview (`preview/`) | ⚠️ | Square Colors only — stale |
 
 ### Not started yet
@@ -142,8 +143,8 @@ core/chess/src/main/kotlin/.../
 
 `docs/PRIVACY.md` — Play Store privacy policy (English + French).
 
-**Tests (130 total, all passing):**
-- `core:chess` (51) — `ChessSessionTest` (18), `ChessSpeechParserTest` (9), `GameFollowDrillTest` (8), `PieceMovesTest` (7), `SquareColorTest` (6), `FindSquareDrillTest` (3)
+**Tests (136 total, all passing):**
+- `core:chess` (57) — `ChessSessionTest` (18), `ChessSpeechParserTest` (9), `GameFollowDrillTest` (8), `PieceMovesTest` (7), `SquareColorTest` (6), `ChessMoveAnnouncerTest` (6), `FindSquareDrillTest` (3)
 - `app` (79) — `FreeBoardViewModelTest` (21), `FamousGamesViewModelTest` (16), `NameSquareViewModelTest` (13), `PiecePathDrillViewModelTest` (9), `PlayBotViewModelTest` (8), `FindSquareViewModelTest` (6), `BoardArrowTest` (5), `ParseBestMoveTest` (1)
 - Run: `./gradlew :core:chess:testDebugUnitTest :app:testDebugUnitTest`
 
@@ -177,7 +178,7 @@ core/chess/src/main/kotlin/.../
 
 **Free Board** — legal chess. Pad (lowercase files, 50% frame opacity), board taps, or **Speak** (FR/EN). Status line: `White to move - NF3`. Illegal SAN/tap/voice: rejected, last legal position kept (`ChessSession.playSan` gated on `legalMoves()`). Voice: `e4`, `knight f3`, `pion prend F4` / `pawn takes F4`, `petit rock` / `castle`, `grand rock` / `long castle`. English STT `S5` is accepted as **f5**.
 
-**Play the Bot** — `PlayBotViewModel` extends `FreeBoardViewModel`, **one** engine instance. Setup Elo (1350–2500) + color. Re-entering with a live game: Continue / Discard. Last bot move shown large above the pad. Thinking on the side-to-move line. Checkmate / Stalemate (short labels) + **Play again** on the same row. Voice same as Free Board.
+**Play the Bot** — `PlayBotViewModel` extends `FreeBoardViewModel`, **one** engine instance. Setup Elo (1350–2500) + color. Re-entering with a live game: Continue / Discard. Last bot move shown large above the pad **and spoken** (Android TTS, FR/EN chips; `Nf3` → “cavalier F trois” / “knight F three”). Thinking on the side-to-move line. Checkmate / Stalemate (short labels) + **Play again** on the same row. Voice input same as Free Board.
 
 **Voice (shared)** — Android `SpeechRecognizer`, no paid API. `RECORD_AUDIO`. Speak + FR/EN chips (persisted in SharedPreferences). Parser: `ChessSpeechParser`.
 
