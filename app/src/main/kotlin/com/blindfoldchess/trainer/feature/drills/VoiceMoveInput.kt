@@ -30,22 +30,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
+import com.blindfoldchess.trainer.AppLanguage
 import com.blindfoldchess.trainer.R
-import java.util.Locale
+import com.blindfoldchess.trainer.rememberAppLanguage
 
-internal enum class VoiceSpeechLanguage(val tag: String) {
-    French("fr-FR"),
-    English("en-US"),
-    ;
-
-    companion object {
-        fun fromTag(tag: String?): VoiceSpeechLanguage =
-            entries.firstOrNull { it.tag == tag } ?: defaultForDevice()
-
-        fun defaultForDevice(): VoiceSpeechLanguage =
-            if (Locale.getDefault().language == "fr") French else English
-    }
-}
+internal typealias VoiceSpeechLanguage = AppLanguage
 
 internal data class VoiceInputState(
     val listening: Boolean,
@@ -55,23 +44,9 @@ internal data class VoiceInputState(
     val cancel: () -> Unit,
 )
 
-private const val VOICE_PREFS = "voice_input"
-private const val VOICE_PREFS_LANGUAGE = "language_tag"
-
 @Composable
-internal fun rememberVoiceSpeechLanguage(): Pair<VoiceSpeechLanguage, (VoiceSpeechLanguage) -> Unit> {
-    val context = LocalContext.current
-    val prefs = remember {
-        context.getSharedPreferences(VOICE_PREFS, Context.MODE_PRIVATE)
-    }
-    var language by remember {
-        mutableStateOf(VoiceSpeechLanguage.fromTag(prefs.getString(VOICE_PREFS_LANGUAGE, null)))
-    }
-    return language to { next ->
-        language = next
-        prefs.edit().putString(VOICE_PREFS_LANGUAGE, next.tag).apply()
-    }
-}
+internal fun rememberVoiceSpeechLanguage(): Pair<AppLanguage, (AppLanguage) -> Unit> =
+    rememberAppLanguage()
 
 @Composable
 internal fun rememberVoiceInput(
@@ -253,17 +228,37 @@ internal fun VoiceSpeakRow(
                 Text(stringResource(R.string.voice_speak))
             }
         }
-        FilterChip(
-            selected = language == VoiceSpeechLanguage.French,
-            onClick = { onLanguage(VoiceSpeechLanguage.French) },
-            label = { Text(stringResource(R.string.voice_lang_fr)) },
+        LanguageChips(
+            language = language,
+            onLanguage = onLanguage,
             enabled = enabled && !voice.listening,
         )
+    }
+}
+
+@Composable
+internal fun LanguageChips(
+    language: AppLanguage,
+    onLanguage: (AppLanguage) -> Unit,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         FilterChip(
-            selected = language == VoiceSpeechLanguage.English,
-            onClick = { onLanguage(VoiceSpeechLanguage.English) },
+            selected = language == AppLanguage.French,
+            onClick = { onLanguage(AppLanguage.French) },
+            label = { Text(stringResource(R.string.voice_lang_fr)) },
+            enabled = enabled,
+        )
+        FilterChip(
+            selected = language == AppLanguage.English,
+            onClick = { onLanguage(AppLanguage.English) },
             label = { Text(stringResource(R.string.voice_lang_en)) },
-            enabled = enabled && !voice.listening,
+            enabled = enabled,
         )
     }
 }

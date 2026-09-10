@@ -176,6 +176,6 @@ fun NameSquareScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
         DrillBackButton(onClick = onBack)
-        Spacer(modifier = Modifier.height(16.dp))
+        ScreenBottomSpace()
     }
 }

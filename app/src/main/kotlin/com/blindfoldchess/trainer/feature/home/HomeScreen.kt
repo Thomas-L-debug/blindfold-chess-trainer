@@ -18,10 +18,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.blindfoldchess.trainer.R
+import com.blindfoldchess.trainer.feature.drills.LanguageChips
+import com.blindfoldchess.trainer.feature.drills.ScreenBottomSpace
+import com.blindfoldchess.trainer.feature.drills.rememberVoiceSpeechLanguage
 import com.blindfoldchess.trainer.ui.ActionCard
 
 @Composable
 fun HomeScreen(
+    onOpenNotationTutorial: () -> Unit,
     onStartFindSquareDrill: () -> Unit,
     onStartNameSquareDrill: () -> Unit,
     onStartSquareColorDrill: () -> Unit,
@@ -31,6 +35,7 @@ fun HomeScreen(
     onStartPlayBotDrill: () -> Unit,
     onOpenAbout: () -> Unit,
 ) {
+    val (language, setLanguage) = rememberVoiceSpeechLanguage()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -60,7 +65,23 @@ fun HomeScreen(
             overflow = TextOverflow.Ellipsis,
         )
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        LanguageChips(
+            language = language,
+            onLanguage = setLanguage,
+        )
+
         Spacer(modifier = Modifier.height(16.dp))
+
+        ActionCard(
+            title = stringResource(R.string.tutorial_notation_title),
+            description = stringResource(R.string.tutorial_notation_description),
+            actionLabel = stringResource(R.string.tutorial_notation_open),
+            onAction = onOpenNotationTutorial,
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         ActionCard(
             title = stringResource(R.string.drill_find_square_title),
@@ -133,6 +154,6 @@ fun HomeScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        ScreenBottomSpace()
     }
 }

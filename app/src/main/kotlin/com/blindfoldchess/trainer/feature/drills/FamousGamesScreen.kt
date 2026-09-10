@@ -165,11 +165,11 @@ private fun FamousGamesLibrary(
 
         games.forEach { game ->
             ActionCard(
-                title = game.title,
+                title = famousGameTitle(game),
                 description = stringResource(R.string.famous_games_vs, game.white, game.black),
                 supportingText = stringResource(
                     R.string.famous_games_meta,
-                    game.event,
+                    famousGameEvent(game),
                     game.year,
                     game.fullMoveCount,
                 ),
@@ -181,7 +181,7 @@ private fun FamousGamesLibrary(
 
         Spacer(modifier = Modifier.height(8.dp))
         DrillBackButton(onClick = onBack)
-        Spacer(modifier = Modifier.height(16.dp))
+        ScreenBottomSpace()
     }
 }
 
@@ -205,7 +205,7 @@ private fun FamousGameReplay(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         DrillPageHeader(
-            title = game?.title.orEmpty(),
+            title = game?.let { famousGameTitle(it) }.orEmpty(),
             description = if (game != null) {
                 stringResource(R.string.famous_games_vs, game.white, game.black)
             } else {
@@ -352,8 +352,36 @@ private fun FamousGameReplay(
         )
         Spacer(modifier = Modifier.height(8.dp))
         DrillBackButton(onClick = onBack)
-        Spacer(modifier = Modifier.height(16.dp))
+        ScreenBottomSpace()
     }
+}
+
+@Composable
+private fun famousGameTitle(game: FamousGame): String {
+    val res = when (game.id) {
+        "opera" -> R.string.famous_game_opera_title
+        "legal" -> R.string.famous_game_legal_title
+        "reti-tartakower" -> R.string.famous_game_reti_title
+        "immortal" -> R.string.famous_game_immortal_title
+        "evergreen" -> R.string.famous_game_evergreen_title
+        "game-of-the-century" -> R.string.famous_game_century_title
+        else -> return game.title
+    }
+    return stringResource(res)
+}
+
+@Composable
+private fun famousGameEvent(game: FamousGame): String {
+    val res = when (game.id) {
+        "opera" -> R.string.famous_game_opera_event
+        "legal" -> R.string.famous_game_legal_event
+        "reti-tartakower" -> R.string.famous_game_reti_event
+        "immortal" -> R.string.famous_game_immortal_event
+        "evergreen" -> R.string.famous_game_evergreen_event
+        "game-of-the-century" -> R.string.famous_game_century_event
+        else -> return game.event
+    }
+    return stringResource(res)
 }
 
 

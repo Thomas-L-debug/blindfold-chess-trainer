@@ -77,12 +77,7 @@ internal fun FreeBoardPlayBody(
         val ply = botLastMovePly
         val san = botLastMoveSan.orEmpty()
         if (ply == null || san.isBlank()) return@LaunchedEffect
-        val language = if (speechLanguage == VoiceSpeechLanguage.French) {
-            ChessMoveAnnouncer.Language.French
-        } else {
-            ChessMoveAnnouncer.Language.English
-        }
-        val phrase = ChessMoveAnnouncer.spoken(san, language)
+        val phrase = ChessMoveAnnouncer.spoken(san, speechLanguage.announcer)
         if (phrase.isBlank()) return@LaunchedEffect
         val langChanged = announcedBotLang.isNotEmpty() && announcedBotLang != speechLanguage.tag
         when {
@@ -353,7 +348,7 @@ internal fun FreeBoardPlayBody(
 
         Spacer(modifier = Modifier.height(16.dp))
         DrillBackButton(onClick = onBack)
-        Spacer(modifier = Modifier.height(16.dp))
+        ScreenBottomSpace()
     }
 }
 

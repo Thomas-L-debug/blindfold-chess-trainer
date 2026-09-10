@@ -8,7 +8,7 @@ Full session context: [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md)
 
 ---
 
-## Project status (5 September 2026)
+## Project status (10 September 2026)
 
 Primary workspace: `D:\CodingProject\blindfold-chess-trainer`  
 Branch: `main`.
@@ -17,34 +17,39 @@ Branch: `main`.
 |---|---|---|
 | Android project (Kotlin + Jetpack Compose) | ✅ | AGP 8.9.1, Kotlin 2.1.10, minSdk 26, targetSdk **36**, NDK 28.2.13676358 |
 | Module `core:chess` | ✅ | `chesslib` via `ChessSession`; `playSan` only accepts `legalMoves()` |
-| Home screen | ✅ | 7 `ActionCard`s, scrollable |
+| Home screen | ✅ | 8 `ActionCard`s, scrollable (Notation + 7 drills); FR/EN chips at the top |
+| **Language** | ✅ | Device language on first launch (`fr` → French, otherwise English); FR/EN switches the **whole** app (UI, voice, TTS, tutorial) |
+| **Notation** tutorial | ✅ | Read, write, and speak SAN; tap a square; Listen via TTS; Back at the bottom |
 | **Find the Square** drill | ✅ | Coordinate → tap the square; opens the board on start |
 | **Name the Square** drill | ✅ | A square lights green → enter coordinates (pad or voice); opens the board on start |
 | **Square Colors** drill | ✅ | Random square → Light / Dark, green/red flash |
 | **Piece Path** drill | ✅ | Bishop / knight / rook / queen; pad **or voice**; illegal → reset + message; unclear speech → message, no reset |
-| **Famous Games** drill | ✅ | Library as home-style cards; **Play this game** shows the board if hidden |
-| **Free Board** drill | ✅ | Legal play, pad, tap, **voice** FR/EN; illegal move rejected, last legal position kept |
-| **Play the Bot** | ✅ | Local Stockfish, 7 Elo levels (1350–2500); Continue / Discard if a game is in progress; last bot move large; **Play again** |
-| Voice input | ✅ | Free Android `SpeechRecognizer`; Speak + FR/EN; Free Board, Play the Bot, Piece Path, Name the Square |
+| **Famous Games** drill | ✅ | Library as home-style cards; titles follow the UI language; **Play this game** shows the board if hidden |
+| **Free Board** drill | ✅ | Legal play, pad, tap, **voice**; illegal move rejected, last legal position kept |
+| **Play the Bot** | ✅ | Local Stockfish, 7 Elo levels (1350–2500); Continue / Discard if a game is in progress; last bot move large **and spoken**; **Play again** |
+| Voice input | ✅ | Free Android `SpeechRecognizer`; Speak on Free Board, Play the Bot, Piece Path, Name the Square |
 | About / license | ✅ | Link at the bottom of Home; GPLv3 + GitHub sources + privacy policy |
+| System navigation bar | ✅ | Last controls (About, Back) can scroll fully above the Android nav bar |
 | Pieces / Flip / Arrows / Coordinates | ✅ | Unicode glyphs, orientation, arrows, notation |
-| Board visibility | ✅ | Hidden at launch and when returning Home; Find the Square, Name the Square, and Famous Games (Play this game) open it |
+| Board visibility | ✅ | Hidden at launch and when returning Home; Find the Square, Name the Square, Notation, and Famous Games (Play this game) open it |
 | Native Stockfish | ✅ | Vendored sf_15, JNI/UCI, `libstockfishjni.so` |
 | `LICENSE` / `NOTICE` | ✅ | GPLv3 (Stockfish) |
-| Unit tests | ✅ | **136** tests (`:core:chess:testDebugUnitTest` + `:app:testDebugUnitTest`)
+| Unit tests | ✅ | **141** tests (`:core:chess:testDebugUnitTest` + `:app:testDebugUnitTest`) |
 | GitHub Actions CI | ✅ | NDK + CMake, tests + debug APK |
 | Room (session history) | ❌ | not started |
 | Web preview (`preview/`) | ⚠️ | Square Colors demo only — **stale** |
 
 **What you can try today:**
 
-1. **Find the Square** — a coordinate is shown → tap that square. The board opens on its own.
-2. **Name the Square** — a square lights green → name it with the pad or **Speak** (`e4`, `e four`, `S5`→f5). The board opens on its own.
-3. **Square Colors** — a square → *Light* / *Dark*. Green 0.5 s / red 0.5 s. Local score, no streak.
-4. **Piece Path** — piece, start → target. Pad or **Speak** (`cavalier f 3`, or just `h6` / `S5`→f5). Illegal → reset + message. Unclear speech (`P5`) → *Couldn't understand* without reset.
-5. **Famous Games** — game cards, **Play this game** (opens the board), replay each announced move.
-6. **Free Board** — pad, tap, or voice (`e4`, `knight f3`, `pion prend F4`, `petit rock` / `castle`). Illegal → message, position unchanged.
-7. **Play the Bot** — Elo + color; if a game already exists: Continue / Discard. Last bot move large **and spoken** (FR/EN). Checkmate/stalemate + **Play again**. Voice input same as Free Board.
+1. **Language** — FR/EN on Home (and on voice rows / the tutorial). The whole UI follows that choice.
+2. **Notation** — how to read, write, and speak moves. Tap a square; Listen plays the spoken form.
+3. **Find the Square** — a coordinate is shown → tap that square. The board opens on its own.
+4. **Name the Square** — a square lights green → name it with the pad or **Speak** (`e4`, `e four`, `S5`→f5). The board opens on its own.
+5. **Square Colors** — a square → *Light* / *Dark*. Green 0.5 s / red 0.5 s. Local score, no streak.
+6. **Piece Path** — piece, start → target. Pad or **Speak** (`cavalier f 3`, or just `h6` / `S5`→f5). Illegal → reset + message. Unclear speech (`P5`) → *Couldn't understand* without reset.
+7. **Famous Games** — game cards, **Play this game** (opens the board), replay each announced move.
+8. **Free Board** — pad, tap, or voice (`e4`, `knight f3`, `pion prend F4`, `petit rock` / `castle`). Illegal → message, position unchanged.
+9. **Play the Bot** — Elo + color; if a game already exists: Continue / Discard. Last bot move large **and spoken**. Checkmate/stalemate + **Play again**. Voice input same as Free Board.
 
 ---
 
@@ -463,18 +468,22 @@ UI / drill files:
 
 ```
 app/.../trainer/
-├── MainActivity.kt                 # board visibility, AppScreen
+├── MainActivity.kt                 # board visibility, AppScreen, app language
+├── AppLanguage.kt                  # FR/EN locale, prefs, Compose provider
 ├── engine/                         # ChessEngine, NativeStockfish, StockfishChessEngine
 ├── feature/board/                  # AppShell, BoardPanel, ChessBoard
-├── feature/home/HomeScreen.kt / AboutScreen.kt
+├── feature/home/HomeScreen.kt / AboutScreen.kt / NotationTutorialScreen.kt
 ├── feature/drills/
-│   ├── CoordinatePad.kt / DrillBackButton.kt
-│   ├── VoiceMoveInput.kt           # SpeechRecognizer, FR/EN, Speak
+│   ├── CoordinatePad.kt / DrillBackButton.kt / ScreenBottomSpace
+│   ├── VoiceMoveInput.kt           # SpeechRecognizer, Speak, FR/EN chips
 │   ├── FindSquare / NameSquare / SquareColor / PiecePath
 │   ├── FamousGamesScreen.kt / FamousGamesViewModel.kt
 │   ├── FreeBoardScreen.kt / FreeBoardViewModel.kt / FreeBoardPlayPad.kt
 │   └── PlayBotScreen.kt / PlayBotViewModel.kt
 └── ui/ActionCard.kt + ui/theme/
+
+app/src/main/res/values/strings.xml      # English UI
+app/src/main/res/values-fr/strings.xml   # French UI
 
 app/src/main/cpp/                   # vendored Stockfish sf_15 + JNI bridge
 ├── CMakeLists.txt
@@ -490,6 +499,8 @@ core/chess/.../
 ├── ChesslibMapping.kt               # internal Square/Move/PieceType <-> chesslib
 ├── FamousGame.kt / FamousGamesCatalog.kt
 ├── GameFollowDrill.kt
+├── ChessMoveAnnouncer.kt            # SAN → spoken FR/EN (bot TTS + tutorial)
+├── NotationTutorial.kt              # bilingual SAN tutorial copy
 └── ChessSpeechParser.kt             # FR/EN speech → SAN / Piece Path square
 ```
 

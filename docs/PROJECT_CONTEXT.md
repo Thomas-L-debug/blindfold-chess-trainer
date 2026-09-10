@@ -1,6 +1,6 @@
 # Blindfold Chess Trainer — PROJECT CONTEXT
 
-**Last updated:** September 5, 2026
+**Last updated:** September 10, 2026
 
 ---
 
@@ -24,7 +24,7 @@ Goal: peaceful, pleasant training at the user's own pace.
 
 ---
 
-## Current Status (September 5, 2026)
+## Current Status (September 10, 2026)
 
 ### Done
 
@@ -33,7 +33,8 @@ Goal: peaceful, pleasant training at the user's own pace.
 | Android project (Kotlin + Compose) | ✅ | AGP 8.9.1, Kotlin 2.1.10, compileSdk/targetSdk **36**, NDK 28.2.13676358 |
 | Module `core:chess` | ✅ | `chesslib` via `ChessSession` ; SAN only applied if it matches `legalMoves()` |
 | Module `app` | ✅ | UI Compose, dark calm theme |
-| Home screen | ✅ | 7 shared `ActionCard`s |
+| Home screen | ✅ | 8 shared `ActionCard`s (Notation tutorial + 7 drills) ; FR/EN chips switch the whole app |
+| Tutorial « Notation » | ✅ | SAN: read / write / speak ; tap square ; Listen uses TTS ; Back at the bottom |
 | Drill « Find the Square » | ✅ | Coordinate → tap square ; **board forced visible** on start |
 | Drill « Name the Square » | ✅ | Inverse of Find the Square ; green highlight → pad **or voice** ; **board forced visible** on start |
 | Drill « Square Colors » | ✅ | Random square → Light / Dark ; flash 0.5 s |
@@ -41,23 +42,23 @@ Goal: peaceful, pleasant training at the user's own pace.
 | Drill « Famous Games » | ✅ | 6 games as home-style cards ; **Play this game** shows the board if hidden |
 | Drill « Free Board » | ✅ | Legal play, pad, taps, **voice** ; illegal move rejected, last legal position kept |
 | Mode « Play the Bot » | ✅ | Stockfish, Elo 1350–2500 ; Continue/Discard if a game is in progress ; last bot move large ; Play again |
-| Voice input | ✅ | Android `SpeechRecognizer` (free) ; Speak + FR/EN ; Free Board, Play the Bot, Piece Path, Name the Square |
+| Language | ✅ | Device language at first launch (fr → French, else English) ; FR/EN chips change UI, voice, TTS, tutorial |
 | About / license | ✅ | Home link ; GPLv3 notice + GitHub source |
 | Privacy policy | ✅ | `docs/PRIVACY.md` (EN+FR) ; About screen + Play URL |
 | Play listing copy | ✅ | `docs/PLAY_LISTING.md` (EN+FR texts + sideload APK) |
 | Pieces / Flip / Arrows / Coordinates | ✅ | Unicode glyphs, orientation, path arrows |
-| Board visibility | ✅ | Hidden at launch and on Home ; Find the Square, Name the Square, and Famous Games play open it |
+| Board visibility | ✅ | Hidden at launch and on Home ; Find the Square, Name the Square, Notation tutorial, and Famous Games play open it |
 | Native Stockfish | ✅ | Vendored sf_15, JNI/UCI |
 | LICENSE / NOTICE | ✅ | GPLv3 (Stockfish) |
 | CI | ✅ | NDK + CMake, tests + APK debug |
 | Docker / Windows scripts | ✅ | Primary workspace Windows `D:\` |
-| Tests | ✅ | **136** JVM unit tests, all passing |
+| Tests | ✅ | **141** JVM unit tests, all passing |
 | Web preview (`preview/`) | ⚠️ | Square Colors only — stale |
 
 ### Not started yet
 
 - More visualization drills (diagonals, knight tours)
-- Room (session history, progress) — voice language is the only persistence (SharedPreferences)
+- Room (session history, progress) — app language is the only persistence (SharedPreferences)
 - ktlint / detekt
 - iOS / KMP
 
@@ -69,11 +70,11 @@ Goal: peaceful, pleasant training at the user's own pace.
 
 ```
 MainActivity
-└── AppScreen: Home | FindSquare | NameSquare | SquareColor | PiecePath | FamousGames | FreeBoard | PlayBot
+└── AppScreen: Home | About | NotationTutorial | FindSquare | NameSquare | SquareColor | PiecePath | FamousGames | FreeBoard | PlayBot
     └── AppShell                 ← board (wrap height), then page content
         ├── BoardPanel           ← ChessBoard + Coordinates / Arrows / Pieces / Flip / Hide
         └── content slot
-            ├── HomeScreen / AboutScreen
+            ├── HomeScreen / AboutScreen / NotationTutorialScreen
             ├── FindSquareScreen
             ├── NameSquareScreen
             ├── SquareColorDrillScreen
@@ -101,6 +102,7 @@ MainActivity
 ```
 app/src/main/kotlin/com/blindfoldchess/trainer/
 ├── MainActivity.kt
+├── AppLanguage.kt               # FR/EN app locale, prefs, Compose provider
 ├── engine/
 │   ├── ChessEngine.kt           # interface + UCI helpers (parseBestMove, Elo→movetime)
 │   ├── NativeStockfish.kt       # JNI externals (startEngine/sendCommand/readLine)
@@ -110,7 +112,7 @@ app/src/main/kotlin/com/blindfoldchess/trainer/
 │   │   ├── AppShell.kt
 │   │   ├── BoardPanel.kt      # height = board square; toggles: Hide, Flip, Coordinates, Arrows, Pieces
 │   │   └── ChessBoard.kt      # squares, pieces (glyphs), highlight, arrows, waypoint circles, flip
-│   ├── home/HomeScreen.kt / AboutScreen.kt
+│   ├── home/HomeScreen.kt / AboutScreen.kt / NotationTutorialScreen.kt
 │   └── drills/
 │       ├── CoordinatePad.kt / DrillBackButton.kt
 │       ├── VoiceMoveInput.kt        # SpeechRecognizer, FR/EN toggle, Speak row
@@ -138,14 +140,16 @@ core/chess/src/main/kotlin/.../
 ├── ChesslibMapping.kt             # internal Square/Move/PieceType <-> chesslib mapping
 ├── FamousGame.kt / FamousGamesCatalog.kt
 ├── GameFollowDrill.kt
+├── ChessMoveAnnouncer.kt          # SAN → spoken FR/EN phrase (bot TTS + notation tutorial)
+├── NotationTutorial.kt            # bilingual SAN tutorial copy + occupancy labels
 └── ChessSpeechParser.kt           # FR/EN speech → SAN / square (S→F, j'ai→G, pawn takes dest, castle aliases)
 ```
 
 `docs/PRIVACY.md` — Play Store privacy policy (English + French).
 
-**Tests (136 total, all passing):**
-- `core:chess` (57) — `ChessSessionTest` (18), `ChessSpeechParserTest` (9), `GameFollowDrillTest` (8), `PieceMovesTest` (7), `SquareColorTest` (6), `ChessMoveAnnouncerTest` (6), `FindSquareDrillTest` (3)
-- `app` (79) — `FreeBoardViewModelTest` (21), `FamousGamesViewModelTest` (16), `NameSquareViewModelTest` (13), `PiecePathDrillViewModelTest` (9), `PlayBotViewModelTest` (8), `FindSquareViewModelTest` (6), `BoardArrowTest` (5), `ParseBestMoveTest` (1)
+**Tests (141 total, all passing):**
+- `core:chess` (60) — `ChessSessionTest` (18), `ChessSpeechParserTest` (9), `GameFollowDrillTest` (8), `PieceMovesTest` (7), `SquareColorTest` (6), `ChessMoveAnnouncerTest` (6), `NotationTutorialTest` (3), `FindSquareDrillTest` (3)
+- `app` (81) — `FreeBoardViewModelTest` (21), `FamousGamesViewModelTest` (16), `NameSquareViewModelTest` (13), `PiecePathDrillViewModelTest` (9), `PlayBotViewModelTest` (8), `FindSquareViewModelTest` (6), `BoardArrowTest` (5), `AppLanguageTest` (2), `ParseBestMoveTest` (1)
 - Run: `./gradlew :core:chess:testDebugUnitTest :app:testDebugUnitTest`
 
 ---
@@ -155,13 +159,14 @@ core/chess/src/main/kotlin/.../
 - **Board zone height** = chessboard square (width minus 72 dp side column). Must **not** use `fillMaxHeight()` in a way that expands to the phone screen.
 - **Side column (top to bottom):** Hide board, Flip, Coordinates, Arrows, Pieces.
 - **Show board:** full-width outlined button above content, only when the board is hidden.
-- **Default hidden:** board starts hidden ; going Home hides it again. Find the Square, Name the Square, and Famous Games « Play this game » set it visible (no-op if already shown).
+- **Navigation bar:** `enableEdgeToEdge()` draws under the system nav. `ScreenBottomSpace` at the end of each page adds the nav-bar inset plus 16 dp so About / Back can scroll fully into view.
+- **Default hidden:** board starts hidden ; going Home hides it again. Find the Square, Name the Square, Notation tutorial, and Famous Games « Play this game » set it visible (no-op if already shown).
 - **Coordinates:** ranks 1–8 left, files a–h bottom only. Notation slot is always reserved (grid does not resize). Flips with the board.
 - **Pieces:** Unicode glyphs (♔♕♖♗♘♙), drawn from the current `OccupiedSquare` list; toggle hides them without losing board state.
 - **Flip:** swaps which side is at the bottom; applies to squares, pieces, arrows, highlight, and the tap overlay.
 - **Arrows:** consecutive legal moves of the current attempt/replay. Illegal reset clears arrows. Square Colors, Find the Square, and Name the Square have none.
 - **Answer flash:** green / red overlay 0.5 s on the relevant square. Name the Square keeps the target green until an answer, then red 0.8 s on a miss.
-- **Tap input:** `Free Board`, `Famous Games`, and `Play the Bot` also accept direct square taps (`onSquareClick`) in addition to the coordinate pad.
+- **Tap input:** `Free Board`, `Famous Games`, and `Play the Bot` also accept direct square taps (`onSquareClick`) in addition to the coordinate pad. The Notation tutorial taps a square to name and speak it.
 - **Voice:** Speak + FR/EN on Free Board, Play the Bot, Piece Path, and Name the Square (`VoiceMoveInput.kt` + `ChessSpeechParser`).
 
 ---
@@ -169,6 +174,8 @@ core/chess/src/main/kotlin/.../
 ## Drill / mode rules
 
 **Piece Path** — Bishop, knight, rook, queen (default knight). Empty-board legality via `PieceType.canMove`. Input: file then rank **or Speak**. Saying a piece name + square is preferred (`cavalier f 3`) ; a bare square (`h6`, `S5`→f5) uses the selected piece. Illegal move: *Illegal move — starting over*, path reset. Unclear speech (`P5`): *Couldn't understand that move*, position unchanged.
+
+**Notation tutorial** — first home card. Starting position on the board. FR/EN chips (same preference as voice). Sections: squares, piece letters, writing SAN, reading SAN, speaking SAN (Listen via `ChessMoveAnnouncer` + TTS). Tap a square to see/hear its name. Copy lives in `NotationTutorial` (`core:chess`).
 
 **Find the Square** — a coordinate is shown, the player taps that square. Starting the drill shows the board.
 
@@ -180,7 +187,9 @@ core/chess/src/main/kotlin/.../
 
 **Play the Bot** — `PlayBotViewModel` extends `FreeBoardViewModel`, **one** engine instance. Setup Elo (1350–2500) + color. Re-entering with a live game: Continue / Discard. Last bot move shown large above the pad **and spoken** (Android TTS, FR/EN chips; `Nf3` → “cavalier F trois” / “knight F three”). Thinking on the side-to-move line. Checkmate / Stalemate (short labels) + **Play again** on the same row. Voice input same as Free Board.
 
-**Voice (shared)** — Android `SpeechRecognizer`, no paid API. `RECORD_AUDIO`. Speak + FR/EN chips (persisted in SharedPreferences). Parser: `ChessSpeechParser`.
+**Voice (shared)** — Android `SpeechRecognizer`, no paid API. `RECORD_AUDIO`. Speak + FR/EN chips. Language is app-wide (`AppLanguage`, persisted); the same chips on Home, tutorial, and voice rows switch UI strings, STT, and TTS. Parser: `ChessSpeechParser`.
+
+**Language** — First launch follows the device (`fr` → French, otherwise English). In-app FR/EN overrides that and is remembered. `values/strings.xml` + `values-fr/strings.xml`.
 
 ---
 

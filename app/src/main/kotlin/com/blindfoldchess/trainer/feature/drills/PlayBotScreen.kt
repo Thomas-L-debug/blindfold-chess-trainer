@@ -164,7 +164,7 @@ private fun PlayBotResume(
 
         Spacer(modifier = Modifier.height(16.dp))
         DrillBackButton(onClick = onBack)
-        Spacer(modifier = Modifier.height(16.dp))
+        ScreenBottomSpace()
     }
 }
 
@@ -259,6 +259,6 @@ private fun PlayBotSetup(
 
         Spacer(modifier = Modifier.height(16.dp))
         DrillBackButton(onClick = onBack)
-        Spacer(modifier = Modifier.height(16.dp))
+        ScreenBottomSpace()
     }
 }

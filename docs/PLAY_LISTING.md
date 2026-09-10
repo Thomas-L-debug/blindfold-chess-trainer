@@ -1,7 +1,7 @@
 # Google Play listing copy
 
 Paste into Play Console when the developer account is verified.  
-UI language of the app is **English**; add **French** as a translation.
+UI languages: **English** (default) and **French**. The app opens in the device language when it is French, otherwise English; FR/EN chips switch the whole app.
 
 Play limits: title **30**, short description **80**, full description **4000**.
 
@@ -30,6 +30,7 @@ Blindfold Chess Trainer is a calm Android app for mental chess visualization. No
 You train at your own pace. Hide the board when you want to work from memory, or show it when you need a check.
 
 Drills
+• Notation — how to read, write, and speak chess moves, in English or French.
 • Find the Square — a coordinate is shown; tap that square.
 • Name the Square — a square lights up; enter its name with the pad or your voice.
 • Square Colors — is this square light or dark?
@@ -62,6 +63,7 @@ Blindfold Chess Trainer est une application Android calme pour la visualisation 
 Tu t’entraînes à ton rythme. Cache le plateau pour travailler de mémoire, ou affiche-le pour vérifier.
 
 Exercices
+• Notation — lire, écrire et dicter les coups, en français ou en anglais.
 • Find the Square — une coordonnée s’affiche ; tape la case.
 • Name the Square — une case s’allume ; entre son nom au pavé ou à la voix.
 • Square Colors — cette case est-elle claire ou foncée ?

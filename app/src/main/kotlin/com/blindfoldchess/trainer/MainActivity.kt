@@ -26,15 +26,18 @@ import com.blindfoldchess.trainer.feature.drills.PiecePathDrillScreen
 import com.blindfoldchess.trainer.feature.drills.SquareColorDrillScreen
 import com.blindfoldchess.trainer.feature.home.AboutScreen
 import com.blindfoldchess.trainer.feature.home.HomeScreen
+import com.blindfoldchess.trainer.feature.home.NotationTutorialScreen
 import com.blindfoldchess.trainer.ui.theme.BlindfoldChessTheme
 
-private enum class AppScreen { Home, About, FindSquare, NameSquare, SquareColor, PiecePath, FamousGames, FreeBoard, PlayBot }
+private enum class AppScreen { Home, About, NotationTutorial, FindSquare, NameSquare, SquareColor, PiecePath, FamousGames, FreeBoard, PlayBot }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val appLanguageState = rememberAppLanguageState()
+            ProvideAppLanguage(appLanguageState) {
             BlindfoldChessTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     var screen by rememberSaveable { mutableStateOf(AppScreen.Home) }
@@ -77,6 +80,13 @@ class MainActivity : ComponentActivity() {
                     ) {
                         when (screen) {
                             AppScreen.Home -> HomeScreen(
+                                onOpenNotationTutorial = {
+                                    moveArrows = emptyList()
+                                    boardPieces = emptyList()
+                                    selectedSquare = null
+                                    isBoardVisible = true
+                                    screen = AppScreen.NotationTutorial
+                                },
                                 onStartFindSquareDrill = {
                                     moveArrows = emptyList()
                                     boardPieces = emptyList()
@@ -111,6 +121,12 @@ class MainActivity : ComponentActivity() {
                                 onOpenAbout = { screen = AppScreen.About },
                             )
                             AppScreen.About -> AboutScreen(onBack = goHome)
+                            AppScreen.NotationTutorial -> NotationTutorialScreen(
+                                onBack = goHome,
+                                onPiecesChange = { boardPieces = it },
+                                onSelectedSquareChange = { selectedSquare = it },
+                                onSquareClickChange = { onBoardSquareClick = it },
+                            )
                             AppScreen.FindSquare -> FindSquareScreen(
                                 onBack = goHome,
                                 onSquareHighlight = { squareHighlight = it },
@@ -157,6 +173,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+            }
             }
         }
     }

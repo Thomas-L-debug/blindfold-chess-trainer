@@ -3,6 +3,9 @@
     <string name="app_name">Blindfold Chess</string>
     <string name="home_title">Blindfold Chess Trainer</string>
     <string name="home_subtitle">Calm, focused training for mental visualization</string>
+    <string name="tutorial_notation_title">Notation</string>
+    <string name="tutorial_notation_description">Read, write, and speak chess moves</string>
+    <string name="tutorial_notation_open">Open</string>
     <string name="drill_find_square_title">Find the Square</string>
     <string name="drill_find_square_description">A coordinate is shown — tap that square on the board</string>
     <string name="find_square_hint">Tap the matching square</string>
@@ -21,6 +24,7 @@
     <string name="next_question">Next</string>
     <string name="start_drill">Start drill</string>
     <string name="action_home">Home</string>
+    <string name="action_back">Back</string>
     <string name="about_entry">About &amp; license</string>
     <string name="about_title">About</string>
     <string name="about_description">License, source, and privacy</string>
@@ -29,9 +33,9 @@
     <string name="about_source">Source code</string>
     <string name="about_license">GNU GPLv3</string>
     <string name="about_privacy">Privacy policy</string>
-    <string name="about_source_url">https://github.com/Thomas-L-debug/blindfold-chess-trainer</string>
-    <string name="about_license_url">https://github.com/Thomas-L-debug/blindfold-chess-trainer/blob/main/LICENSE</string>
-    <string name="about_privacy_url">https://github.com/Thomas-L-debug/blindfold-chess-trainer/blob/main/docs/PRIVACY.md</string>
+    <string name="about_source_url" translatable="false">https://github.com/Thomas-L-debug/blindfold-chess-trainer</string>
+    <string name="about_license_url" translatable="false">https://github.com/Thomas-L-debug/blindfold-chess-trainer/blob/main/LICENSE</string>
+    <string name="about_privacy_url" translatable="false">https://github.com/Thomas-L-debug/blindfold-chess-trainer/blob/main/docs/PRIVACY.md</string>
     <string name="drill_piece_path_title">Piece Path</string>
     <string name="drill_piece_path_description">Reach the target with legal moves</string>
     <string name="piece_bishop">Bishop</string>
@@ -65,6 +69,18 @@
     <string name="famous_games_complete">Game complete</string>
     <string name="famous_games_replay">Replay</string>
     <string name="famous_games_library">Library</string>
+    <string name="famous_game_opera_title">The Opera Game</string>
+    <string name="famous_game_opera_event">Paris Opera</string>
+    <string name="famous_game_legal_title">Légal’s Mate</string>
+    <string name="famous_game_legal_event">Paris</string>
+    <string name="famous_game_reti_title">Réti’s Mate</string>
+    <string name="famous_game_reti_event">Vienna</string>
+    <string name="famous_game_immortal_title">The Immortal Game</string>
+    <string name="famous_game_immortal_event">London</string>
+    <string name="famous_game_evergreen_title">The Evergreen Game</string>
+    <string name="famous_game_evergreen_event">Berlin</string>
+    <string name="famous_game_century_title">Game of the Century</string>
+    <string name="famous_game_century_event">Rosenwald Memorial, New York</string>
     <string name="drill_free_board_title">Free Board</string>
     <string name="drill_free_board_description">Play any legal move on the board, or enter manually a move - ex : Ra1 | e4 | Nxf3 | Raxe1</string>
     <string name="free_board_capture">x</string>

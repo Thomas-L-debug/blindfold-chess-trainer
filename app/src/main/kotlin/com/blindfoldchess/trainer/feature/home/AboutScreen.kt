@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.blindfoldchess.trainer.R
 import com.blindfoldchess.trainer.feature.drills.DrillBackButton
 import com.blindfoldchess.trainer.feature.drills.DrillPageHeader
+import com.blindfoldchess.trainer.feature.drills.ScreenBottomSpace
 
 @Composable
 fun AboutScreen(
@@ -93,6 +94,6 @@ fun AboutScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
         DrillBackButton(onClick = onBack)
-        Spacer(modifier = Modifier.height(16.dp))
+        ScreenBottomSpace()
     }
 }
