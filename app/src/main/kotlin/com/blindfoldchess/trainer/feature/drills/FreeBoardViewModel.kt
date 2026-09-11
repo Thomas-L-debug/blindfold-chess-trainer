@@ -156,10 +156,7 @@ open class FreeBoardViewModel(
         val state = _uiState.value
         if (!state.inputEnabled) return
         val heard = utterances.map { it.trim() }.filter { it.isNotEmpty() }
-        if (heard.isEmpty()) {
-            applyResult(PlayResult.Illegal, attemptedFrom = null, attemptedTo = null)
-            return
-        }
+        if (heard.isEmpty()) return
         _uiState.update { it.copy(lastSpoken = heard.first(), lastAttemptCorrect = null) }
         val tried = linkedSetOf<String>()
         for (utterance in heard) {

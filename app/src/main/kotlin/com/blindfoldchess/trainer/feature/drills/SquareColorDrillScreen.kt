@@ -48,6 +48,7 @@ fun SquareColorDrillScreen(
             return@LaunchedEffect
         }
         onSquareHighlight(SquareHighlight(question.square, correct = wasCorrect))
+        if (!wasCorrect) playDrillErrorSound()
         delay(SQUARE_HIGHLIGHT_MS)
         onSquareHighlight(null)
         viewModel.loadNextQuestion()

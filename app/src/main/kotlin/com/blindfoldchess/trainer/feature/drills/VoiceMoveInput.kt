@@ -76,6 +76,7 @@ internal fun rememberVoiceInput(
             null
         }
     }
+    val beepSilencer = remember(context) { SpeechBeepSilencer(context) }
 
     DisposableEffect(recognizer) {
         if (recognizer == null) {
@@ -96,6 +97,7 @@ internal fun rememberVoiceInput(
 
                 override fun onError(errorCode: Int) {
                     listening = false
+                    beepSilencer.unmute()
                     error = when (errorCode) {
                         SpeechRecognizer.ERROR_NO_MATCH,
                         SpeechRecognizer.ERROR_SPEECH_TIMEOUT,
@@ -111,6 +113,7 @@ internal fun rememberVoiceInput(
 
                 override fun onResults(results: Bundle?) {
                     listening = false
+                    beepSilencer.unmute()
                     error = null
                     val spoken = results
                         ?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
@@ -129,6 +132,7 @@ internal fun rememberVoiceInput(
                 recognizer.setRecognitionListener(null)
                 runCatching { recognizer.cancel() }
                 recognizer.destroy()
+                beepSilencer.unmute()
                 listening = false
             }
         }
@@ -149,12 +153,15 @@ internal fun rememberVoiceInput(
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
             putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
+            putExtra("android.speech.extra.BEEP_ENABLED", false)
         }
         runCatching {
             engine.cancel()
+            beepSilencer.mute()
             engine.startListening(intent)
             listening = true
         }.onFailure {
+            beepSilencer.unmute()
             listening = false
             error = errorGeneric
         }
@@ -172,6 +179,7 @@ internal fun rememberVoiceInput(
 
     val cancel = {
         runCatching { recognizer?.cancel() }
+        beepSilencer.unmute()
         listening = false
         error = null
     }

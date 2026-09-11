@@ -3,7 +3,6 @@ package com.blindfoldchess.trainer.feature.board
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -11,10 +10,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -32,7 +30,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.blindfoldchess.trainer.core.chess.ChessMan
@@ -43,7 +40,8 @@ import com.blindfoldchess.trainer.ui.theme.Accent
 import com.blindfoldchess.trainer.ui.theme.BoardArrow
 import com.blindfoldchess.trainer.ui.theme.BoardDarkSquare
 import com.blindfoldchess.trainer.ui.theme.BoardLightSquare
-import com.blindfoldchess.trainer.ui.theme.BoardNotation
+import com.blindfoldchess.trainer.ui.theme.BoardNotationOnDark
+import com.blindfoldchess.trainer.ui.theme.BoardNotationOnLight
 import com.blindfoldchess.trainer.ui.theme.BoardPieceBlack
 import com.blindfoldchess.trainer.ui.theme.BoardPieceWhite
 import com.blindfoldchess.trainer.ui.theme.Correct
@@ -75,7 +73,6 @@ fun visitedSquares(arrows: List<BoardArrow>): List<Square> {
 
 private val FILES = ('a'..'h').toList()
 private val RANKS = (8 downTo 1).toList()
-private val NotationSize = 20.dp
 private const val PieceFontFactor = 0.80f
 private const val ArrowAlpha = 0.70f
 private const val ArrivalCircleDiameterFactor = 0.90f
@@ -86,6 +83,9 @@ fun squareFromGrid(col: Int, row: Int, flipped: Boolean = false): Square? {
     val rank = if (flipped) row + 1 else 8 - row
     return Square(file, rank)
 }
+
+fun boardNotationColor(square: Square): Color =
+    if (SquareColor.of(square) == SquareColor.LIGHT) BoardNotationOnLight else BoardNotationOnDark
 
 private fun files(flipped: Boolean): List<Char> = if (flipped) FILES.asReversed() else FILES
 
@@ -101,7 +101,7 @@ private fun gridRow(rank: Int, flipped: Boolean): Int =
 fun ChessBoard(
     showNotation: Boolean,
     modifier: Modifier = Modifier,
-    highlight: SquareHighlight? = null,
+    highlights: List<SquareHighlight> = emptyList(),
     showArrows: Boolean = false,
     arrows: List<BoardArrow> = emptyList(),
     showPieces: Boolean = true,
@@ -114,57 +114,25 @@ fun ChessBoard(
         modifier = modifier,
         contentAlignment = Alignment.Center,
     ) {
-        // Espace toujours réservé pour que l'échiquier ne bouge pas quand on toggle les coords.
         val availableHeight = if (maxHeight.value.isFinite()) maxHeight else maxWidth
-        val side = minOf(maxWidth - NotationSize, availableHeight - NotationSize).coerceAtLeast(0.dp)
-
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .width(NotationSize)
-                        .height(side),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (showNotation) {
-                        RankNotationColumn(boardHeight = side, flipped = flipped)
-                    }
-                }
-
-                BoardCanvas(
-                    highlight = highlight,
-                    arrows = if (showArrows) arrows else emptyList(),
-                    pieces = if (showPieces) pieces else emptyList(),
-                    selectedSquare = selectedSquare,
-                    onSquareClick = onSquareClick,
-                    flipped = flipped,
-                    modifier = Modifier
-                        .width(side)
-                        .height(side),
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .width(side + NotationSize)
-                    .height(NotationSize),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (showNotation) {
-                    FileNotationRow(
-                        boardWidth = side,
-                        flipped = flipped,
-                        modifier = Modifier.width(side + NotationSize),
-                    )
-                }
-            }
-        }
+        val side = minOf(maxWidth, availableHeight).coerceAtLeast(0.dp)
+        BoardCanvas(
+            showNotation = showNotation,
+            highlights = highlights,
+            arrows = if (showArrows) arrows else emptyList(),
+            pieces = if (showPieces) pieces else emptyList(),
+            selectedSquare = selectedSquare,
+            onSquareClick = onSquareClick,
+            flipped = flipped,
+            modifier = Modifier.size(side),
+        )
     }
 }
 
 @Composable
 private fun BoardCanvas(
-    highlight: SquareHighlight?,
+    showNotation: Boolean,
+    highlights: List<SquareHighlight>,
     arrows: List<BoardArrow>,
     pieces: List<OccupiedSquare>,
     selectedSquare: Square?,
@@ -207,6 +175,10 @@ private fun BoardCanvas(
             }
         }
 
+        if (showNotation) {
+            InnerBoardNotation(flipped = flipped)
+        }
+
         BoardPieces(pieces = pieces, flipped = flipped)
 
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -231,16 +203,15 @@ private fun BoardCanvas(
                 )
             }
 
-            highlight?.let {
-                val colIndex = gridCol(it.square.file, flipped)
-                val rowIndex = gridRow(it.square.rank, flipped)
-                val accent = if (it.correct) Correct else Incorrect
+            highlights.forEach { mark ->
+                val colIndex = gridCol(mark.square.file, flipped)
+                val rowIndex = gridRow(mark.square.rank, flipped)
+                val accent = if (mark.correct) Correct else Incorrect
                 val topLeft = Offset(colIndex * squareSize, rowIndex * squareSize)
-                val square = Size(squareSize, squareSize)
                 drawRect(
                     color = accent.copy(alpha = 0.72f),
                     topLeft = topLeft,
-                    size = square,
+                    size = Size(squareSize, squareSize),
                 )
                 val strokeWidth = 4.dp.toPx()
                 val inset = strokeWidth / 2f
@@ -399,49 +370,45 @@ private fun DrawScope.drawMoveArrow(
 }
 
 @Composable
-private fun FileNotationRow(
-    boardWidth: Dp,
-    flipped: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier.width(boardWidth),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(modifier = Modifier.width(NotationSize))
-        files(flipped).forEach { file ->
-            Text(
-                text = file.toString(),
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Center,
-                color = BoardNotation,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-            )
-        }
-    }
-}
-
-@Composable
-private fun RankNotationColumn(
-    boardHeight: Dp,
-    flipped: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier.height(boardHeight),
-        verticalArrangement = Arrangement.SpaceEvenly,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        ranks(flipped).forEach { rank ->
-            Text(
-                text = rank.toString(),
-                color = BoardNotation,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center,
-            )
+private fun InnerBoardNotation(flipped: Boolean) {
+    val visualFiles = files(flipped)
+    val visualRanks = ranks(flipped)
+    Column(modifier = Modifier.fillMaxSize()) {
+        visualRanks.forEachIndexed { row, rank ->
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+            ) {
+                visualFiles.forEachIndexed { col, file ->
+                    val square = Square(file, rank)
+                    val color = boardNotationColor(square)
+                    Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                        if (col == 0) {
+                            Text(
+                                text = rank.toString(),
+                                color = color,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier
+                                    .align(Alignment.TopStart)
+                                    .padding(start = 3.dp, top = 1.dp),
+                            )
+                        }
+                        if (row == visualRanks.lastIndex) {
+                            Text(
+                                text = file.toString(),
+                                color = color,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .padding(end = 3.dp, bottom = 1.dp),
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

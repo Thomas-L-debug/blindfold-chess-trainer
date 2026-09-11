@@ -83,6 +83,7 @@ class PiecePathDrillViewModel(
                 lastSpoken = heard.first(),
                 unrecognized = true,
                 illegal = false,
+                flashToken = it.flashToken + 1,
             )
         }
     }

@@ -87,6 +87,7 @@ fun FamousGamesScreen(
 
         onSquareHighlight(SquareHighlight(square, correct = correct))
         if (!correct) {
+            playDrillErrorSound()
             val attemptFrom = uiState.lastAttemptFrom ?: square
             onMoveArrows(listOf(BoardArrow(attemptFrom, square)))
         } else {

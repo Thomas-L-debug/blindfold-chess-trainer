@@ -46,13 +46,13 @@ class MainActivity : ComponentActivity() {
                     var showArrows by rememberSaveable { mutableStateOf(true) }
                     var showPieces by rememberSaveable { mutableStateOf(true) }
                     var flipped by rememberSaveable { mutableStateOf(false) }
-                    var squareHighlight by remember { mutableStateOf<SquareHighlight?>(null) }
+                    var squareHighlights by remember { mutableStateOf<List<SquareHighlight>>(emptyList()) }
                     var moveArrows by remember { mutableStateOf<List<BoardArrow>>(emptyList()) }
                     var boardPieces by remember { mutableStateOf<List<OccupiedSquare>>(emptyList()) }
                     var selectedSquare by remember { mutableStateOf<Square?>(null) }
                     var onBoardSquareClick by remember { mutableStateOf<((Square) -> Unit)?>(null) }
                     val goHome = {
-                        squareHighlight = null
+                        squareHighlights = emptyList()
                         moveArrows = emptyList()
                         boardPieces = emptyList()
                         selectedSquare = null
@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
                         onShowPiecesChange = { showPieces = it },
                         flipped = flipped,
                         onFlipBoard = { flipped = !flipped },
-                        highlight = squareHighlight,
+                        highlights = squareHighlights,
                         arrows = moveArrows,
                         pieces = boardPieces,
                         selectedSquare = selectedSquare,
@@ -84,7 +84,7 @@ class MainActivity : ComponentActivity() {
                                     moveArrows = emptyList()
                                     boardPieces = emptyList()
                                     selectedSquare = null
-                                    isBoardVisible = true
+                                    isBoardVisible = false
                                     screen = AppScreen.NotationTutorial
                                 },
                                 onStartFindSquareDrill = {
@@ -129,25 +129,25 @@ class MainActivity : ComponentActivity() {
                             )
                             AppScreen.FindSquare -> FindSquareScreen(
                                 onBack = goHome,
-                                onSquareHighlight = { squareHighlight = it },
+                                onSquareHighlight = { squareHighlights = listOfNotNull(it) },
                                 onSquareClickChange = { onBoardSquareClick = it },
                             )
                             AppScreen.NameSquare -> NameSquareScreen(
                                 onBack = goHome,
-                                onSquareHighlight = { squareHighlight = it },
+                                onSquareHighlights = { squareHighlights = it },
                             )
                             AppScreen.SquareColor -> SquareColorDrillScreen(
                                 onBack = goHome,
-                                onSquareHighlight = { squareHighlight = it },
+                                onSquareHighlight = { squareHighlights = listOfNotNull(it) },
                             )
                             AppScreen.PiecePath -> PiecePathDrillScreen(
                                 onBack = goHome,
-                                onSquareHighlight = { squareHighlight = it },
+                                onSquareHighlight = { squareHighlights = listOfNotNull(it) },
                                 onMoveArrows = { moveArrows = it },
                             )
                             AppScreen.FamousGames -> FamousGamesScreen(
                                 onBack = goHome,
-                                onSquareHighlight = { squareHighlight = it },
+                                onSquareHighlight = { squareHighlights = listOfNotNull(it) },
                                 onMoveArrows = { moveArrows = it },
                                 onPiecesChange = { boardPieces = it },
                                 onSelectedSquareChange = { selectedSquare = it },
@@ -156,7 +156,7 @@ class MainActivity : ComponentActivity() {
                             )
                             AppScreen.PlayBot -> PlayBotScreen(
                                 onBack = goHome,
-                                onSquareHighlight = { squareHighlight = it },
+                                onSquareHighlight = { squareHighlights = listOfNotNull(it) },
                                 onMoveArrows = { moveArrows = it },
                                 onPiecesChange = { boardPieces = it },
                                 onSelectedSquareChange = { selectedSquare = it },
@@ -164,7 +164,7 @@ class MainActivity : ComponentActivity() {
                             )
                             AppScreen.FreeBoard -> FreeBoardScreen(
                                 onBack = goHome,
-                                onSquareHighlight = { squareHighlight = it },
+                                onSquareHighlight = { squareHighlights = listOfNotNull(it) },
                                 onMoveArrows = { moveArrows = it },
                                 onPiecesChange = { boardPieces = it },
                                 onSelectedSquareChange = { selectedSquare = it },

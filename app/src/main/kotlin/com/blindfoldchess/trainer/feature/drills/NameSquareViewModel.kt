@@ -36,7 +36,7 @@ class NameSquareViewModel(
     fun onFile(file: Char) {
         if (_uiState.value.answered) return
         _uiState.update {
-            it.copy(pendingFile = file, unrecognized = false, lastSpoken = null)
+            it.copy(pendingFile = file, unrecognized = false)
         }
     }
 
@@ -62,6 +62,7 @@ class NameSquareViewModel(
                 lastSpoken = heard.first(),
                 unrecognized = true,
                 pendingFile = null,
+                flashToken = it.flashToken + 1,
             )
         }
     }
@@ -103,7 +104,7 @@ class NameSquareViewModel(
         val correct = drill.isCorrect(target, square)
         _uiState.update {
             it.copy(
-                answered = true,
+                answered = correct,
                 wasCorrect = correct,
                 lastAttempt = square,
                 pendingFile = null,

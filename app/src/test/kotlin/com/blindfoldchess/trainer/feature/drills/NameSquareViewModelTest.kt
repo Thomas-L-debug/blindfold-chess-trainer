@@ -41,7 +41,7 @@ class NameSquareViewModelTest {
         viewModel.onRank(5)
 
         val state = viewModel.uiState.value
-        assertTrue(state.answered)
+        assertFalse(state.answered)
         assertEquals(false, state.wasCorrect)
         assertEquals("e5", state.lastAttempt?.algebraic)
         assertEquals(0, state.correctCount)
@@ -49,18 +49,25 @@ class NameSquareViewModelTest {
     }
 
     @Test
-    fun `ignores pad input while the miss is shown`() {
+    fun `a miss stays visible until the next complete answer`() {
         val viewModel = viewModelWithSquares("e4", "a1")
         viewModel.onFile('e')
         viewModel.onRank(5)
-        viewModel.onFile('e')
-        viewModel.onRank(4)
 
+        val afterMiss = viewModel.uiState.value
+        assertFalse(afterMiss.answered)
+        assertEquals(false, afterMiss.wasCorrect)
+        assertEquals("e5", afterMiss.lastAttempt?.algebraic)
+
+        viewModel.onFile('e')
+        assertEquals(false, viewModel.uiState.value.wasCorrect)
+        assertEquals("e5", viewModel.uiState.value.lastAttempt?.algebraic)
+
+        viewModel.onRank(4)
         val state = viewModel.uiState.value
-        assertEquals(false, state.wasCorrect)
-        assertEquals("e5", state.lastAttempt?.algebraic)
-        assertEquals("e4", state.target?.algebraic)
-        assertEquals(1, state.totalCount)
+        assertEquals(true, state.wasCorrect)
+        assertEquals("e4", state.lastAttempt?.algebraic)
+        assertEquals(2, state.totalCount)
     }
 
     @Test
@@ -155,15 +162,20 @@ class NameSquareViewModelTest {
     }
 
     @Test
-    fun `spoken input is ignored while the miss is shown`() {
+    fun `spoken miss stays until the next spoken answer`() {
         val viewModel = viewModelWithSquares("e4", "a1")
         viewModel.playSpoken(listOf("e5"))
-        viewModel.playSpoken(listOf("e4"))
 
+        val afterMiss = viewModel.uiState.value
+        assertEquals(false, afterMiss.wasCorrect)
+        assertEquals("e5", afterMiss.lastAttempt?.algebraic)
+        assertEquals("e5", afterMiss.lastSpoken)
+
+        viewModel.playSpoken(listOf("e4"))
         val state = viewModel.uiState.value
-        assertEquals(false, state.wasCorrect)
-        assertEquals("e5", state.lastAttempt?.algebraic)
-        assertEquals(1, state.totalCount)
+        assertEquals(true, state.wasCorrect)
+        assertEquals("e4", state.lastAttempt?.algebraic)
+        assertEquals(2, state.totalCount)
     }
 
     private fun viewModelWithSquares(vararg squares: String): NameSquareViewModel {

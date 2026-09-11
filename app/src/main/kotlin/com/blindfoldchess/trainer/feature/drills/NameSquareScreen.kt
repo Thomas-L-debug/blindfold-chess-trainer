@@ -30,12 +30,11 @@ import com.blindfoldchess.trainer.ui.theme.Incorrect
 import kotlinx.coroutines.delay
 
 private const val LEGAL_HIGHLIGHT_MS = 500L
-private const val ILLEGAL_HIGHLIGHT_MS = 800L
 
 @Composable
 fun NameSquareScreen(
     onBack: () -> Unit,
-    onSquareHighlight: (SquareHighlight?) -> Unit = {},
+    onSquareHighlights: (List<SquareHighlight>) -> Unit = {},
     viewModel: NameSquareViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -47,29 +46,33 @@ fun NameSquareScreen(
         onUtterances = viewModel::playSpoken,
     )
 
-    LaunchedEffect(uiState.target, uiState.wasCorrect, uiState.flashToken) {
+    LaunchedEffect(uiState.target, uiState.wasCorrect, uiState.lastAttempt, uiState.flashToken) {
         val target = uiState.target
         if (target == null) {
-            onSquareHighlight(null)
+            onSquareHighlights(emptyList())
             return@LaunchedEffect
         }
-        when (uiState.wasCorrect) {
-            true -> {
-                onSquareHighlight(SquareHighlight(target, correct = true))
-                delay(LEGAL_HIGHLIGHT_MS)
-                viewModel.loadNextQuestion()
+        val marks = buildList {
+            add(SquareHighlight(target, correct = true))
+            val attempt = uiState.lastAttempt
+            if (uiState.wasCorrect == false && attempt != null && attempt != target) {
+                add(SquareHighlight(attempt, correct = false))
             }
-            false -> {
-                onSquareHighlight(SquareHighlight(target, correct = false))
-                delay(ILLEGAL_HIGHLIGHT_MS)
-                viewModel.unlockRetry()
-            }
-            null -> onSquareHighlight(SquareHighlight(target, correct = true))
+        }
+        onSquareHighlights(marks)
+        if (uiState.wasCorrect == true) {
+            delay(LEGAL_HIGHLIGHT_MS)
+            viewModel.loadNextQuestion()
         }
     }
 
+    DrillErrorSoundEffect(
+        play = uiState.wasCorrect == false || uiState.unrecognized,
+        token = uiState.flashToken,
+    )
+
     DisposableEffect(Unit) {
-        onDispose { onSquareHighlight(null) }
+        onDispose { onSquareHighlights(emptyList()) }
     }
 
     Column(
@@ -87,16 +90,18 @@ fun NameSquareScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        val showingMiss = uiState.wasCorrect == false && uiState.pendingFile == null
         val draft = when {
-            uiState.lastAttempt != null -> uiState.lastAttempt?.algebraic.orEmpty().uppercase()
             uiState.pendingFile != null -> uiState.pendingFile?.uppercaseChar()?.toString().orEmpty()
+            uiState.lastAttempt != null -> uiState.lastAttempt?.algebraic.orEmpty().uppercase()
             else -> " "
         }
         Text(
             text = draft.ifEmpty { " " },
-            fontSize = 72.sp,
+            fontSize = 29.sp,
+            lineHeight = 34.sp,
             fontWeight = FontWeight.Light,
-            color = MaterialTheme.colorScheme.primary,
+            color = if (showingMiss) Incorrect else MaterialTheme.colorScheme.primary,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -117,7 +122,7 @@ fun NameSquareScreen(
                 }
             },
             style = MaterialTheme.typography.bodyMedium,
-            color = if (uiState.unrecognized) {
+            color = if (uiState.unrecognized || uiState.wasCorrect == false) {
                 Incorrect
             } else {
                 MaterialTheme.colorScheme.onSurfaceVariant

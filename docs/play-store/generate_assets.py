@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -17,29 +18,10 @@ MUTED = (0x9A, 0xA3, 0xB2)
 ACCENT = (0x7E, 0xB8, 0xA4)
 BOARD_LIGHT = (0x8F, 0xA8, 0x9A)
 BOARD_DARK = (0x2E, 0x38, 0x44)
-PIECE_WHITE = (0xFF, 0xFF, 0xFF)
-PIECE_BLACK = (0x14, 0x18, 0x1F)
 ARROW = (0xE3, 0xA8, 0x7C)
 
-WHITE = {
-    "K": "♔",
-    "Q": "♕",
-    "R": "♖",
-    "B": "♗",
-    "N": "♘",
-    "P": "♙",
-}
-BLACK = {
-    "K": "♚",
-    "Q": "♛",
-    "R": "♜",
-    "B": "♝",
-    "N": "♞",
-    "P": "♟",
-}
-
 # Position after 1.e4 d5 2.exd5 Qxd5 3.Nc3 Qe5+ 4.Qe2 Nc6 5.Nf3 Qxe2+ 6.Bxe2 Nb4
-# rank 8 -> 1, file a -> h
+# rank 8 -> 1, file a -> h. Last move is Nb4 from c6 (knight jump), not c5.
 POSITION = {
     (0, 0): ("R", False),
     (2, 0): ("B", False),
@@ -71,6 +53,25 @@ POSITION = {
     (7, 7): ("R", True),
 }
 
+# Clean squares in 02-board.png (no last-move overlay) used as sprite sources.
+# (file, rank_from_top) on the screenshot.
+SPRITE_CELLS = {
+    ("P", True): (0, 6),   # a2
+    ("R", True): (0, 7),   # a1
+    ("B", True): (2, 7),   # c1
+    ("N", True): (2, 5),   # c3
+    ("K", True): (4, 7),   # e1
+    ("P", False): (0, 1),  # a7
+    ("R", False): (0, 0),  # a8
+    ("B", False): (2, 0),  # c8
+    ("N", False): (6, 0),  # g8
+    ("K", False): (4, 0),  # e8
+}
+
+# Pixel edges of the 8 files / ranks on 02-board.png (1080x2132 crop).
+SHOT_X = [56, 159, 261, 364, 467, 570, 672, 775, 878]
+SHOT_Y = [19, 122, 224, 327, 430, 533, 635, 738, 841]
+
 FONTS = Path(r"C:\Windows\Fonts")
 
 
@@ -82,6 +83,33 @@ def rounded_paste(canvas: Image.Image, src: Image.Image, xy: tuple[int, int], ra
     mask = Image.new("L", src.size, 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, src.width, src.height), radius=radius, fill=255)
     canvas.paste(src, xy, mask)
+
+
+def _dist2(a: tuple[int, int, int], b: tuple[int, int, int]) -> int:
+    return (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2
+
+
+def extract_piece_sprites() -> dict[tuple[str, bool], Image.Image]:
+    """Cut filled Android glyphs out of the native board screenshot."""
+    shot = Image.open(ROOT / "screenshots" / "02-board.png").convert("RGB")
+    sprites: dict[tuple[str, bool], Image.Image] = {}
+    light_cut = 34 * 34
+    dark_cut = 26 * 26
+    for key, (file, rank) in SPRITE_CELLS.items():
+        cell = shot.crop((SHOT_X[file], SHOT_Y[rank], SHOT_X[file + 1], SHOT_Y[rank + 1]))
+        rgba = cell.convert("RGBA")
+        px = rgba.load()
+        w, h = rgba.size
+        on_light = (file + rank) % 2 == 0
+        board = BOARD_LIGHT if on_light else BOARD_DARK
+        cut = light_cut if on_light else dark_cut
+        for y in range(h):
+            for x in range(w):
+                r, g, b, _a = px[x, y]
+                if _dist2((r, g, b), board) <= cut:
+                    px[x, y] = (0, 0, 0, 0)
+        sprites[key] = rgba
+    return sprites
 
 
 def draw_icon() -> Image.Image:
@@ -102,71 +130,64 @@ def draw_icon() -> Image.Image:
     return img
 
 
+def _blend(a: tuple[int, int, int], b: tuple[int, int, int], t: float) -> tuple[int, int, int]:
+    return (
+        round(a[0] + (b[0] - a[0]) * t),
+        round(a[1] + (b[1] - a[1]) * t),
+        round(a[2] + (b[2] - a[2]) * t),
+    )
+
+
+def _edge(i: int, n: int) -> int:
+    return round(i * n / 8)
+
+
 def draw_board(board_px: int) -> Image.Image:
-    notation = 28
-    square = (board_px - notation) // 8
-    inner = square * 8
-    board_px = inner + notation
     img = Image.new("RGB", (board_px, board_px), BG)
     draw = ImageDraw.Draw(img)
-    origin = notation
-    piece_font = font("seguisym.ttf", max(30, int(square * 0.82)))
-    coord_font = font("segoeui.ttf", 14)
+    sprites = extract_piece_sprites()
+    last_from = (2, 2)  # c6
+    last_to = (1, 4)  # b4  — knight jump (1,2)
+
+    def cell(file: int, rank: int) -> tuple[int, int, int, int]:
+        return (
+            _edge(file, board_px),
+            _edge(rank, board_px),
+            _edge(file + 1, board_px),
+            _edge(rank + 1, board_px),
+        )
+
+    def center(file: int, rank: int) -> tuple[float, float]:
+        x0, y0, x1, y1 = cell(file, rank)
+        return ((x0 + x1) / 2, (y0 + y1) / 2)
 
     for file in range(8):
         for rank in range(8):
             light = (file + rank) % 2 == 0
-            x0 = origin + file * square
-            y0 = origin + rank * square
-            draw.rectangle(
-                (x0, y0, x0 + square - 1, y0 + square - 1),
-                fill=BOARD_LIGHT if light else BOARD_DARK,
-            )
-            piece = POSITION.get((file, rank))
-            if not piece:
-                continue
-            kind, is_white = piece
-            glyph = WHITE[kind] if is_white else BLACK[kind]
-            fill = PIECE_WHITE if is_white else PIECE_BLACK
-            # Opposite halo so outline pieces stay readable on both square colors.
-            stroke = (0x1A, 0x1E, 0x24) if is_white else (0xE6, 0xEEE, 0xE8)
-            bbox = draw.textbbox((0, 0), glyph, font=piece_font)
-            tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-            tx = x0 + (square - tw) / 2 - bbox[0]
-            ty = y0 + (square - th) / 2 - bbox[1] - square * 0.03
-            draw.text(
-                (tx, ty),
-                glyph,
-                font=piece_font,
-                fill=fill,
-                stroke_width=2,
-                stroke_fill=stroke,
-            )
+            fill = BOARD_LIGHT if light else BOARD_DARK
+            if (file, rank) in (last_from, last_to):
+                fill = _blend(fill, ARROW, 0.38)
+            x0, y0, x1, y1 = cell(file, rank)
+            draw.rectangle((x0, y0, x1 - 1, y1 - 1), fill=fill)
 
-    def center(file: int, rank: int) -> tuple[float, float]:
-        return (origin + (file + 0.5) * square, origin + (rank + 0.5) * square)
-
-    x1, y1 = center(2, 3)  # c5
-    x2, y2 = center(1, 4)  # b4
+    x1, y1 = center(*last_from)
+    x2, y2 = center(*last_to)
     draw.line((x1, y1, x2, y2), fill=ARROW, width=5)
+    ang = math.atan2(y2 - y1, x2 - x1)
+    ah = 13
     draw.polygon(
-        [(x2 - 1, y2 + 12), (x2 + 11, y2 - 3), (x2 - 12, y2 - 1)],
+        [
+            (x2, y2),
+            (x2 - ah * math.cos(ang - 0.5), y2 - ah * math.sin(ang - 0.5)),
+            (x2 - ah * math.cos(ang + 0.5), y2 - ah * math.sin(ang + 0.5)),
+        ],
         fill=ARROW,
     )
-    bx, by = center(1, 4)
-    r = square * 0.40
-    draw.ellipse((bx - r, by - r, bx + r, by + r), outline=ARROW, width=3)
 
-    for i in range(8):
-        ch = str(8 - i)
-        bbox = draw.textbbox((0, 0), ch, font=coord_font)
-        tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-        draw.text(
-            ((notation - tw) / 2, origin + i * square + (square - th) / 2),
-            ch,
-            font=coord_font,
-            fill=MUTED,
-        )
+    for (file, rank), (kind, is_white) in POSITION.items():
+        x0, y0, x1, y1 = cell(file, rank)
+        piece = sprites[(kind, is_white)].resize((x1 - x0, y1 - y0), Image.Resampling.LANCZOS)
+        img.paste(piece, (x0, y0), piece)
     return img
 
 
@@ -175,18 +196,10 @@ def draw_feature_graphic() -> Image.Image:
     img = Image.new("RGB", (w, h), BG)
     draw = ImageDraw.Draw(img)
 
-    board = draw_board(400)
-    board_x, board_y = 48, (h - board.height) // 2
-    rounded_paste(img, board, (board_x, board_y), radius=18)
-    # quiet outline around the board, like the app cards
-    draw.rounded_rectangle(
-        (board_x, board_y, board_x + board.width - 1, board_y + board.height - 1),
-        radius=18,
-        outline=(0x3A, 0x42, 0x4C),
-        width=1,
-    )
+    board = draw_board(h)
+    img.paste(board, (0, 0))
 
-    text_left = board_x + board.width + 48
+    text_left = board.width + 48
     text_right = w - 56
     col_w = text_right - text_left
 
@@ -233,17 +246,23 @@ def draw_feature_graphic() -> Image.Image:
 
 
 def process_screenshot(src: Path, dst: Path, extra_top: int = 0) -> tuple[int, int]:
+    """Phone screenshot → 1080×1920 (9:16), 24-bit PNG, no alpha."""
     im = Image.open(src).convert("RGB")
     w, h = im.size
     # 1080x2340 Samsung: status icons occupy ~36–72, 3-button nav starts ~2208.
     status = 76 if h >= 2300 else max(36, int(h * 0.034))
     nav = 132 if h >= 2300 else max(56, int(h * 0.055))
-    top = status + extra_top
+    top = min(status + extra_top, h - nav - 2)
     im = im.crop((0, top, w, h - nav))
     cw, ch = im.size
-    if ch > cw * 2:
-        extra = ch - cw * 2
-        im = im.crop((0, extra // 2, cw, ch - extra // 2 - extra % 2))
+    target_h = round(cw * 16 / 9)
+    if ch > target_h:
+        im = im.crop((0, 0, cw, target_h))
+    elif ch < target_h:
+        padded = Image.new("RGB", (cw, target_h), BG)
+        padded.paste(im, (0, 0))
+        im = padded
+    im = im.resize((1080, 1920), Image.Resampling.LANCZOS)
     im.save(dst, "PNG", optimize=True)
     return im.size
 
@@ -271,6 +290,9 @@ def main() -> None:
     for src_name, dst_name, extra_top in mapping:
         src = SCREENSHOT_DIR / src_name
         dst = shots_dir / dst_name
+        if not src.exists():
+            print(f"skip screenshot {src_name} (source missing)")
+            continue
         size = process_screenshot(src, dst, extra_top=extra_top)
         print(f"screenshot {dst_name} {size[0]}x{size[1]}")
 

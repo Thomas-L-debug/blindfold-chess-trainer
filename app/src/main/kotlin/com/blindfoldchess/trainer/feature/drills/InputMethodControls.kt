@@ -83,13 +83,17 @@ internal fun InputMethodControls(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             InputMethodToggle(
-                label = stringResource(R.string.input_pad),
+                label = stringResource(
+                    if (visibility.showPad) R.string.input_hide_pad else R.string.input_show_pad,
+                ),
                 checked = visibility.showPad,
                 onCheckedChange = visibility.onShowPadChange,
                 modifier = Modifier.weight(1f),
             )
             InputMethodToggle(
-                label = stringResource(R.string.input_voice),
+                label = stringResource(
+                    if (visibility.showVoice) R.string.input_hide_voice else R.string.input_show_voice,
+                ),
                 checked = visibility.showVoice,
                 onCheckedChange = visibility.onShowVoiceChange,
                 modifier = Modifier.weight(1f),
@@ -151,6 +155,6 @@ private fun ToggleLabel(label: String) {
         text = label,
         style = MaterialTheme.typography.labelLarge,
         textAlign = TextAlign.Center,
-        maxLines = 1,
+        maxLines = 2,
     )
 }

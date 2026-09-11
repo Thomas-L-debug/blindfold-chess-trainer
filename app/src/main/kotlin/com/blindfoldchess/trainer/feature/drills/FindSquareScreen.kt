@@ -60,6 +60,7 @@ fun FindSquareScreen(
             onSquareHighlight(null)
             viewModel.loadNextQuestion()
         } else {
+            playDrillErrorSound()
             delay(ILLEGAL_HIGHLIGHT_MS)
             onSquareHighlight(null)
             viewModel.unlockRetry()

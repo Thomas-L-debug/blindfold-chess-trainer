@@ -78,8 +78,8 @@
     <string name="free_board_review_hint">Un nouveau coup ici efface la suite de la ligne</string>
     <string name="free_board_choose_file">Plusieurs pièces peuvent y aller — choisis la colonne</string>
     <string name="free_board_choose_rank">Plusieurs pièces peuvent y aller — choisis la rangée</string>
-    <string name="free_board_undo">Annuler</string>
-    <string name="free_board_reset">Réinitialiser</string>
+    <string name="free_board_undo">Annuler le dernier coup</string>
+    <string name="free_board_reset">Recommencer la partie</string>
     <string name="free_board_illegal">Coup illégal</string>
     <string name="free_board_check">%1$s en échec</string>
     <string name="free_board_checkmate">Échec et mat</string>
@@ -97,8 +97,10 @@
     <string name="play_bot_thinking">Le bot réfléchit…</string>
     <string name="play_bot_failed">Le bot n’a pas pu jouer</string>
     <string name="play_bot_play_again">Rejouer</string>
-    <string name="input_pad">Pavé</string>
-    <string name="input_voice">Voix</string>
+    <string name="input_show_pad">Afficher le pavé</string>
+    <string name="input_hide_pad">Cacher le pavé</string>
+    <string name="input_show_voice">Afficher la voix</string>
+    <string name="input_hide_voice">Cacher la voix</string>
     <string name="voice_speak">Parler</string>
     <string name="voice_listening">Écoute…</string>
     <string name="voice_no_match">Pas compris — réessaie</string>

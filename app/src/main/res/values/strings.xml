@@ -89,8 +89,8 @@
     <string name="free_board_review_hint">A new move here discards the rest of the line</string>
     <string name="free_board_choose_file">Several pieces can go there — choose the file</string>
     <string name="free_board_choose_rank">Several pieces can go there — choose the rank</string>
-    <string name="free_board_undo">Undo</string>
-    <string name="free_board_reset">Reset</string>
+    <string name="free_board_undo">Undo last move</string>
+    <string name="free_board_reset">Reset the game</string>
     <string name="free_board_illegal">Illegal move</string>
     <string name="free_board_check">%1$s in check</string>
     <string name="free_board_checkmate">Checkmate</string>
@@ -108,8 +108,10 @@
     <string name="play_bot_thinking">Bot is thinking…</string>
     <string name="play_bot_failed">The bot could not move</string>
     <string name="play_bot_play_again">Play again</string>
-    <string name="input_pad">Pad</string>
-    <string name="input_voice">Voice</string>
+    <string name="input_show_pad">Show pad</string>
+    <string name="input_hide_pad">Hide pad</string>
+    <string name="input_show_voice">Show voice</string>
+    <string name="input_hide_voice">Hide voice</string>
     <string name="voice_speak">Speak</string>
     <string name="voice_lang_fr">FR</string>
     <string name="voice_lang_en">EN</string>

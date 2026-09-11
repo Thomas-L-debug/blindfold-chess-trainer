@@ -43,9 +43,7 @@ import com.blindfoldchess.trainer.core.chess.ChessMan
 import com.blindfoldchess.trainer.core.chess.ChessMoveAnnouncer
 import com.blindfoldchess.trainer.ui.theme.Correct
 import com.blindfoldchess.trainer.ui.theme.Incorrect
-import kotlinx.coroutines.delay
 
-private const val ILLEGAL_MESSAGE_MS = 1500L
 
 @Composable
 internal fun FreeBoardPlayBody(
@@ -73,6 +71,10 @@ internal fun FreeBoardPlayBody(
     LaunchedEffect(voice.listening) {
         if (voice.listening) tts.stop()
     }
+    DrillErrorSoundEffect(
+        play = uiState.lastAttemptCorrect == false,
+        token = uiState.flashToken,
+    )
     LaunchedEffect(botLastMovePly, botLastMoveSan, speechLanguage) {
         val ply = botLastMovePly
         val san = botLastMoveSan.orEmpty()
@@ -112,18 +114,9 @@ internal fun FreeBoardPlayBody(
             else -> MaterialTheme.colorScheme.onSurfaceVariant
         }
         val moveDraft = uiState.moveDraft.uppercase()
-        var showIllegal by remember { mutableStateOf(false) }
-        LaunchedEffect(uiState.flashToken, uiState.lastAttemptCorrect) {
-            if (uiState.lastAttemptCorrect == false) {
-                showIllegal = true
-                delay(ILLEGAL_MESSAGE_MS)
-                showIllegal = false
-            } else {
-                showIllegal = false
-            }
-        }
-        val illegal = showIllegal
+        val illegal = uiState.lastAttemptCorrect == false
         val draftColor = if (illegal) Incorrect else MaterialTheme.colorScheme.primary
+        val spoken = uiState.lastSpoken
         val statusLine = buildAnnotatedString {
             append(status)
             if (uiState.botThinking) {
@@ -133,16 +126,14 @@ internal fun FreeBoardPlayBody(
                 append(" · ")
                 append(stringResource(R.string.voice_listening))
             }
-            val spoken = uiState.lastSpoken
             when {
-                moveDraft.isNotEmpty() || (illegal && spoken.isNullOrBlank()) -> {
+                moveDraft.isNotEmpty() -> {
                     append(" - ")
                     withStyle(SpanStyle(color = draftColor)) {
-                        when {
-                            moveDraft.isNotEmpty() && illegal ->
-                                append("$moveDraft - ${stringResource(R.string.free_board_illegal)}")
-                            illegal -> append(stringResource(R.string.free_board_illegal))
-                            else -> append(moveDraft)
+                        if (illegal) {
+                            append("$moveDraft - ${stringResource(R.string.free_board_illegal)}")
+                        } else {
+                            append(moveDraft)
                         }
                     }
                 }
@@ -154,6 +145,12 @@ internal fun FreeBoardPlayBody(
                         } else {
                             append(spoken)
                         }
+                    }
+                }
+                illegal -> {
+                    append(" - ")
+                    withStyle(SpanStyle(color = draftColor)) {
+                        append(stringResource(R.string.free_board_illegal))
                     }
                 }
             }
@@ -335,14 +332,22 @@ internal fun FreeBoardPlayBody(
                 enabled = !uiState.botThinking && uiState.atLatest && uiState.moves.isNotEmpty(),
                 modifier = Modifier.weight(1f),
             ) {
-                Text(stringResource(R.string.free_board_undo))
+                Text(
+                    text = stringResource(R.string.free_board_undo),
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                )
             }
             OutlinedButton(
                 onClick = viewModel::reset,
                 enabled = !uiState.botThinking,
                 modifier = Modifier.weight(1f),
             ) {
-                Text(stringResource(R.string.free_board_reset))
+                Text(
+                    text = stringResource(R.string.free_board_reset),
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                )
             }
         }
 

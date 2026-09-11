@@ -1,6 +1,8 @@
 package com.blindfoldchess.trainer.feature.board
 
 import com.blindfoldchess.trainer.core.chess.Square
+import com.blindfoldchess.trainer.ui.theme.BoardNotationOnDark
+import com.blindfoldchess.trainer.ui.theme.BoardNotationOnLight
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -56,5 +58,14 @@ class BoardArrowTest {
         assertEquals(Square('a', 8), squareFromGrid(7, 7, flipped = true))
         assertEquals(Square('e', 4), squareFromGrid(3, 3, flipped = true))
         assertEquals(Square('d', 5), squareFromGrid(4, 4, flipped = true))
+    }
+
+    @Test
+    fun `inner coordinates contrast with the square color`() {
+        // a1 is dark, a8 is light.
+        assertEquals(BoardNotationOnDark, boardNotationColor(Square('a', 1)))
+        assertEquals(BoardNotationOnLight, boardNotationColor(Square('a', 8)))
+        assertEquals(BoardNotationOnLight, boardNotationColor(Square('h', 1)))
+        assertEquals(BoardNotationOnDark, boardNotationColor(Square('h', 8)))
     }
 }

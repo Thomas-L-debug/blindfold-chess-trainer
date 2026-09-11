@@ -53,6 +53,10 @@ fun PiecePathDrillScreen(
         languageTag = speechLanguage.tag,
         onUtterances = viewModel::playSpoken,
     )
+    DrillErrorSoundEffect(
+        play = uiState.illegal || uiState.unrecognized,
+        token = uiState.flashToken,
+    )
 
     LaunchedEffect(
         uiState.flashToken,
